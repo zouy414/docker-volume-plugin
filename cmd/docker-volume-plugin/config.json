@@ -1,0 +1,50 @@
+{
+    "description": "Net Volume Driver for Docker Swarm",
+    "documentation": "",
+    "entrypoint": [
+        "/docker-volume-plugin"
+    ],
+    "env": [
+        {
+            "name": "UNIX_ENDPOINT",
+            "value": "/run/docker/plugins/net-volume.sock"
+        },
+        {
+            "name": "LOG_LEVEL",
+            "settable": [
+                "value"
+            ],
+            "value": "info"
+        },
+        {
+            "name": "DRIVER",
+            "settable": [
+                "value"
+            ],
+            "value": "nfs"
+        },
+        {
+            "name": "DRIVER_OPTIONS",
+            "settable": [
+                "value"
+            ],
+            "value": "{\"address\": \"nfs-server.example.com\", \"remotePath\": \"/exported/path\"}"
+        }
+    ],
+    "interface": {
+        "types": [
+            "docker.volumedriver/1.0"
+        ],
+        "socket": "net-volume.sock"
+    },
+    "linux": {
+        "capabilities": [
+            "CAP_SYS_ADMIN"
+        ]
+    },
+    "mounts": [],
+    "network": {
+        "type": "host"
+    },
+    "propagatedMount": "/var/lib/docker-volumes"
+}
