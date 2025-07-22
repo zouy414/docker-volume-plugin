@@ -25,3 +25,9 @@ volumes:
   sample:
     driver: docker-volume-plugin
 ```
+
+## How to Upgrade
+
+1. Drain target node by `docker node update <target-node> --availability drain`
+2. Wait for the node to drain and then execute `docker plugin disable -f docker-volume-plugin`
+3. Upgrade plugin by `docker plugin upgrade`
