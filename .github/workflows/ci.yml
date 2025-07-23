@@ -6,8 +6,7 @@ name: CI
 on:
   push:
     branches: [ "master" ]
-  pull_request:
-    branches: [ "master" ]
+  pull_request: ~
 
 jobs:
   build:
@@ -18,12 +17,15 @@ jobs:
         uses: actions/setup-go@v4
         with:
           go-version: '1.23'
+      - name: Lint
+        run: golangci/golangci-lint-action@v6.0.1
       - name: Test
         run: make unit
       - name: Build
         run: make build
   docker:
     runs-on: ubuntu-latest
+    needs: build
     steps:
       - uses: actions/checkout@v4
       - name: Build the Docker image
