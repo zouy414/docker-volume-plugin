@@ -1,0 +1,30 @@
+name: Release
+
+on:
+  push:
+    tags: [ 'v*.*.*' ]
+
+env:
+  REGISTRY: ghcr.io
+
+jobs:
+  release-docker-volume-plugin:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+    env:
+      PLUGIN: docker-volume-plugin
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build ${{ env.PLUGIN }}
+        run: echo "${TAGS}" | xargs -I {} IMAGE=${{ env.REGISTRY }}/${{ env.PLUGIN }} TAG={} make plugin
+      - name: Log into registry ${{ env.REGISTRY }}
+        uses: docker/login-action@343f7c4344506bcbf9b4de18042ae17996df046d # v3.0.0
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Push image
+        run: echo "${TAGS}" | xargs -I {} docker plugin push ${{ env.REGISTRY }}/${{ env.PLUGIN }}:{}
