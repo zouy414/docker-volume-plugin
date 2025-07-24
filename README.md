@@ -1,6 +1,7 @@
 # Docker Volume Plugin
 
 [![CI](https://github.com/zouy414/docker-volume-plugin/actions/workflows/ci.yml/badge.svg)](https://github.com/zouy414/docker-volume-plugin/actions/workflows/ci.yml)
+[![Release](https://github.com/zouy414/docker-volume-plugin/actions/workflows/release.yml/badge.svg)](https://github.com/zouy414/docker-volume-plugin/actions/workflows/release.yml)
 
 NFS volume plugin for docker
 
