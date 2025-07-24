@@ -19,7 +19,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Build ${{ env.PLUGIN }}
-        run: echo "${TAGS}" | xargs -I {} IMAGE=${{ env.REGISTRY }}/${{ env.PLUGIN }} TAG={} make plugin
+        run: IMAGE=${{ env.REGISTRY }}/${{ env.PLUGIN }} TAG=${{ github.ref_name }} make plugin
       - name: Log into registry ${{ env.REGISTRY }}
         uses: docker/login-action@343f7c4344506bcbf9b4de18042ae17996df046d # v3.0.0
         with:
@@ -27,4 +27,4 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Push image
-        run: echo "${TAGS}" | xargs -I {} docker plugin push ${{ env.REGISTRY }}/${{ env.PLUGIN }}:{}
+        run: docker plugin push ${{ env.REGISTRY }}/${{ env.PLUGIN }}:${{ github.ref_name }}
