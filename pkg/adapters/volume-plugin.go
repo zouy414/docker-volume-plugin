@@ -2,9 +2,9 @@ package adapters
 
 import (
 	"context"
-	"net-volume-plugins/pkg/drivers"
-	"net-volume-plugins/pkg/drivers/apis"
-	"net-volume-plugins/pkg/log"
+	"docker-volume-plugin/pkg/drivers"
+	"docker-volume-plugin/pkg/drivers/apis"
+	"docker-volume-plugin/pkg/log"
 	"path"
 	"strings"
 	"time"
@@ -12,27 +12,27 @@ import (
 	"github.com/docker/go-plugins-helpers/volume"
 )
 
-type DockerVolumePlugin struct {
+type VolumePlugin struct {
 	driverInstance apis.Driver
 	logger         *log.Logger
 	mountpointBase string
 	volume.Driver
 }
 
-func NewDockerVolumePlugin(ctx context.Context, logger *log.Logger, driver string, driverOptions string) (*DockerVolumePlugin, error) {
+func NewVolumePlugin(ctx context.Context, logger *log.Logger, driver string, driverOptions string) (*VolumePlugin, error) {
 	driverInstance, err := drivers.New(ctx, logger.WithService("nfs"), driver, volume.DefaultDockerRootDirectory, driverOptions)
 	if err != nil {
 		return nil, err
 	}
 
-	return &DockerVolumePlugin{
+	return &VolumePlugin{
 		driverInstance: driverInstance,
 		logger:         logger,
 		mountpointBase: volume.DefaultDockerRootDirectory,
 	}, nil
 }
 
-func (d *DockerVolumePlugin) Create(req *volume.CreateRequest) error {
+func (d *VolumePlugin) Create(req *volume.CreateRequest) error {
 	err := d.driverInstance.Create(req.Name, req.Options)
 	if strings.Contains(err.Error(), "already created") {
 		d.logger.Infof("volume %s already exists, skipping creation", req.Name)
@@ -42,7 +42,7 @@ func (d *DockerVolumePlugin) Create(req *volume.CreateRequest) error {
 	return err
 }
 
-func (d *DockerVolumePlugin) List() (*volume.ListResponse, error) {
+func (d *VolumePlugin) List() (*volume.ListResponse, error) {
 	listResponse := &volume.ListResponse{
 		Volumes: make([]*volume.Volume, 0),
 	}
@@ -69,7 +69,7 @@ func (d *DockerVolumePlugin) List() (*volume.ListResponse, error) {
 	return listResponse, nil
 }
 
-func (d *DockerVolumePlugin) Get(req *volume.GetRequest) (*volume.GetResponse, error) {
+func (d *VolumePlugin) Get(req *volume.GetRequest) (*volume.GetResponse, error) {
 	getResponse := &volume.GetResponse{}
 
 	metadata, err := d.driverInstance.Get(req.Name)
@@ -90,11 +90,11 @@ func (d *DockerVolumePlugin) Get(req *volume.GetRequest) (*volume.GetResponse, e
 	return getResponse, nil
 }
 
-func (d *DockerVolumePlugin) Remove(req *volume.RemoveRequest) error {
+func (d *VolumePlugin) Remove(req *volume.RemoveRequest) error {
 	return d.driverInstance.Remove(req.Name)
 }
 
-func (d *DockerVolumePlugin) Path(req *volume.PathRequest) (*volume.PathResponse, error) {
+func (d *VolumePlugin) Path(req *volume.PathRequest) (*volume.PathResponse, error) {
 	pathResponse := &volume.PathResponse{}
 
 	mountpoint, err := d.driverInstance.Path(req.Name)
@@ -108,7 +108,7 @@ func (d *DockerVolumePlugin) Path(req *volume.PathRequest) (*volume.PathResponse
 	return pathResponse, nil
 }
 
-func (d *DockerVolumePlugin) Mount(req *volume.MountRequest) (*volume.MountResponse, error) {
+func (d *VolumePlugin) Mount(req *volume.MountRequest) (*volume.MountResponse, error) {
 	mountResponse := &volume.MountResponse{}
 
 	mountpoint, err := d.driverInstance.Mount(req.Name, req.ID)
@@ -121,15 +121,15 @@ func (d *DockerVolumePlugin) Mount(req *volume.MountRequest) (*volume.MountRespo
 	return mountResponse, nil
 }
 
-func (d *DockerVolumePlugin) Unmount(req *volume.UnmountRequest) error {
+func (d *VolumePlugin) Unmount(req *volume.UnmountRequest) error {
 	return d.driverInstance.Unmount(req.Name, req.ID)
 }
 
-func (d *DockerVolumePlugin) Capabilities() *volume.CapabilitiesResponse {
+func (d *VolumePlugin) Capabilities() *volume.CapabilitiesResponse {
 	return &volume.CapabilitiesResponse{Capabilities: volume.Capability{Scope: "local"}}
 }
 
-func (d *DockerVolumePlugin) Destroy() error {
+func (d *VolumePlugin) Destroy() error {
 	// Cleanup resources if needed
 	if d.driverInstance != nil {
 		return d.driverInstance.Destroy()

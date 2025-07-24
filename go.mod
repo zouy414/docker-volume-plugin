@@ -1,4 +1,4 @@
-module net-volume-plugins
+module docker-volume-plugin
 
 go 1.23.0
 

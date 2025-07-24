@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"strings"
 
-	"net-volume-plugins/pkg/drivers/apis"
-	"net-volume-plugins/pkg/log"
+	"docker-volume-plugin/pkg/drivers/apis"
+	"docker-volume-plugin/pkg/log"
 
 	badger "github.com/dgraph-io/badger/v4"
 	"github.com/gofrs/flock"

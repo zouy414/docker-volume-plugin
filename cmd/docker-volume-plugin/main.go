@@ -2,9 +2,9 @@ package main
 
 import (
 	"context"
+	"docker-volume-plugin/pkg/adapters"
+	"docker-volume-plugin/pkg/log"
 	"flag"
-	"net-volume-plugins/pkg/adapters"
-	"net-volume-plugins/pkg/log"
 	"os"
 	"strings"
 
@@ -38,7 +38,7 @@ func main() {
 		logger.Fatalf("invalid log level: %s", logLevel)
 	}
 
-	driverAdapter, err := adapters.NewDockerVolumePlugin(context.Background(), logger.WithService("docker-volume-plugin"), driver, driverOptions)
+	driverAdapter, err := adapters.NewVolumePlugin(context.Background(), logger.WithService("docker-volume-plugin"), driver, driverOptions)
 	if err != nil {
 		logger.Fatalf("failed to create docker volume plugin adapter: %v", err)
 	}

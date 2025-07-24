@@ -2,7 +2,7 @@ package drivers
 
 import (
 	"context"
-	"net-volume-plugins/pkg/log"
+	"docker-volume-plugin/pkg/log"
 	"os"
 	"path"
 	"testing"
