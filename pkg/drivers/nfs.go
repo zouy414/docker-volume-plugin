@@ -185,9 +185,11 @@ func (n *nfs) Destroy() error {
 		n.logger.Warningf("failed to close badger db: %v", err)
 	}
 
-	err = utils.Umount(n.rootPath)
-	if err != nil {
-		return fmt.Errorf("failed to unmount NFS mount root path %s: %v", n.rootPath, err)
+	if n.opts.Address != "nfs-server.mock" {
+		err = utils.Umount(n.rootPath)
+		if err != nil {
+			return fmt.Errorf("failed to unmount NFS mount root path %s: %v", n.rootPath, err)
+		}
 	}
 
 	return nil
