@@ -2,10 +2,10 @@ name: Release
 
 on:
   push:
-    tags: [ 'v*.*.*' ]
+    tags: ["v*.*.*"]
 
 env:
-  REGISTRY: ghcr.io
+  REGISTRY: zouyu613 # ghcr.io
 
 jobs:
   docker-volume-plugin:
@@ -21,10 +21,10 @@ jobs:
       - name: Build ${{ env.PLUGIN }}
         run: IMAGE=${{ env.REGISTRY }}/${{ env.PLUGIN }} TAG=${{ github.ref_name }} make plugin
       - name: Log into registry ${{ env.REGISTRY }}
-        uses: docker/login-action@343f7c4344506bcbf9b4de18042ae17996df046d # v3.0.0
+        uses: docker/login-action@343f7c4344506bcbf9b4de18042ae17996df046d
         with:
-          registry: ${{ env.REGISTRY }}
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          registry: docker.io
+          username: ${{ env.REGISTRY }}
+          password: ${{ secrets.RELEASE_ACTION_TOKEN }}
       - name: Push image
         run: docker plugin push ${{ env.REGISTRY }}/${{ env.PLUGIN }}:${{ github.ref_name }}
