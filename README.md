@@ -1,8 +1,8 @@
 # Docker Volume Plugin
 
-NFS volume plugin for docker
-
 [![CI](https://github.com/zouy414/docker-volume-plugin/actions/workflows/ci.yml/badge.svg)](https://github.com/zouy414/docker-volume-plugin/actions/workflows/ci.yml)
+
+NFS volume plugin for docker
 
 ## Quick Start
 
@@ -36,7 +36,7 @@ volumes:
 2. Wait for the node to drain and then execute `docker plugin disable -f docker-volume-plugin`
 3. Upgrade plugin by `docker plugin upgrade`
 
-## Supported Net Volume
+## Supported Net Volumes
 
 |Name|Driver|Options|
 |:-|:-|:-|

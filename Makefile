@@ -13,7 +13,7 @@ help: #@help Display this help
 	@echo "Variables:"
 	@awk -F '?=.*#$(VARIABLES_PREFIX)' '/[a-zA-Z0-9_-]+ *\?=.*#$(VARIABLES_PREFIX)/ {var=$$1; gsub(/export +/, "", var); printf "  \033[36m%-23s\033[0m %s\n", var, $$2}' $(MAKEFILE_LIST)
 
-run: #@help Run specified driver on local
+run: #@help Run specified plugin on local
 	go run cmd/$(PLUGIN)/main.go
 
 build: #@help Build binary
