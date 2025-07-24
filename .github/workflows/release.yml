@@ -8,7 +8,7 @@ env:
   REGISTRY: ghcr.io
 
 jobs:
-  release-docker-volume-plugin:
+  docker-volume-plugin:
     runs-on: ubuntu-latest
     permissions:
       contents: read
