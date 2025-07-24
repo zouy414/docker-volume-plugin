@@ -64,7 +64,7 @@ func (l *Logger) Debug(v ...interface{}) {
 		return
 	}
 
-	l.logger.Output(2, fmt.Sprint(append([]interface{}{l.service, debugPrefix}, v...)...))
+	_ = l.logger.Output(2, fmt.Sprint(append([]interface{}{l.service, debugPrefix}, v...)...))
 }
 
 // Debugf message
@@ -73,7 +73,7 @@ func (l *Logger) Debugf(format string, v ...interface{}) {
 		return
 	}
 
-	l.logger.Output(2, fmt.Sprintf("%s%s"+format, append([]interface{}{l.service, debugPrefix}, v...)...))
+	_ = l.logger.Output(2, fmt.Sprintf("%s%s"+format, append([]interface{}{l.service, debugPrefix}, v...)...))
 }
 
 // Info message
@@ -82,7 +82,7 @@ func (l *Logger) Info(v ...interface{}) {
 		return
 	}
 
-	l.logger.Output(2, fmt.Sprint(append([]interface{}{l.service, infoPrefix}, v...)...))
+	_ = l.logger.Output(2, fmt.Sprint(append([]interface{}{l.service, infoPrefix}, v...)...))
 }
 
 // Infof message
@@ -91,7 +91,7 @@ func (l *Logger) Infof(format string, v ...interface{}) {
 		return
 	}
 
-	l.logger.Output(2, fmt.Sprintf("%s%s"+format, append([]interface{}{l.service, infoPrefix}, v...)...))
+	_ = l.logger.Output(2, fmt.Sprintf("%s%s"+format, append([]interface{}{l.service, infoPrefix}, v...)...))
 }
 
 // Warn message
@@ -100,7 +100,7 @@ func (l *Logger) Warning(v ...interface{}) {
 		return
 	}
 
-	l.logger.Output(2, fmt.Sprint(append([]interface{}{l.service, warnPrefix}, v...)...))
+	_ = l.logger.Output(2, fmt.Sprint(append([]interface{}{l.service, warnPrefix}, v...)...))
 }
 
 // Warnf message
@@ -109,7 +109,7 @@ func (l *Logger) Warningf(format string, v ...interface{}) {
 		return
 	}
 
-	l.logger.Output(2, fmt.Sprintf("%s%s"+format, append([]interface{}{l.service, warnPrefix}, v...)...))
+	_ = l.logger.Output(2, fmt.Sprintf("%s%s"+format, append([]interface{}{l.service, warnPrefix}, v...)...))
 }
 
 // Error message
@@ -118,7 +118,7 @@ func (l *Logger) Error(v ...interface{}) {
 		return
 	}
 
-	l.logger.Output(2, fmt.Sprint(append([]interface{}{l.service, errorPrefix}, v...)...))
+	_ = l.logger.Output(2, fmt.Sprint(append([]interface{}{l.service, errorPrefix}, v...)...))
 }
 
 // Errorf message
@@ -127,17 +127,17 @@ func (l *Logger) Errorf(format string, v ...interface{}) {
 		return
 	}
 
-	l.logger.Output(2, fmt.Sprintf("%s%s"+format, append([]interface{}{l.service, errorPrefix}, v...)...))
+	_ = l.logger.Output(2, fmt.Sprintf("%s%s"+format, append([]interface{}{l.service, errorPrefix}, v...)...))
 }
 
 // Fatal message
 func (l *Logger) Fatal(v ...interface{}) {
-	l.logger.Output(2, fmt.Sprint(append([]interface{}{l.service, fatalPrefix}, v...)...))
+	_ = l.logger.Output(2, fmt.Sprint(append([]interface{}{l.service, fatalPrefix}, v...)...))
 	os.Exit(1)
 }
 
 // Fatalf message
 func (l *Logger) Fatalf(format string, v ...interface{}) {
-	l.logger.Output(2, fmt.Sprintf("%s%s"+format, append([]interface{}{l.service, fatalPrefix}, v...)...))
+	_ = l.logger.Output(2, fmt.Sprintf("%s%s"+format, append([]interface{}{l.service, fatalPrefix}, v...)...))
 	os.Exit(1)
 }

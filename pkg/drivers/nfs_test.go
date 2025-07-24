@@ -19,8 +19,16 @@ func TestNFSDriver(t *testing.T) {
 	if err != nil {
 		t.Fatalf("got error when new nfs driver: %v", err)
 	}
-	defer driver.Destroy()
-	defer os.RemoveAll(path.Join(os.TempDir(), "net-volume-nfs"))
+	defer func() {
+		if err := driver.Destroy(); err != nil {
+			t.Errorf("got error when destroy nfs driver: %v", err)
+		}
+	}()
+	defer func() {
+		if err := os.RemoveAll(path.Join(os.TempDir(), "net-volume-nfs")); err != nil {
+			t.Errorf("got error when remove temp dir: %v", err)
+		}
+	}()
 
 	// Test Create
 	err = driver.Create("test", nil)

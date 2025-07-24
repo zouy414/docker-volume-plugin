@@ -42,7 +42,11 @@ func main() {
 	if err != nil {
 		logger.Fatalf("failed to create docker volume plugin adapter: %v", err)
 	}
-	defer driverAdapter.Destroy()
+	defer func() {
+		if err := driverAdapter.Destroy(); err != nil {
+			logger.Errorf("failed to destroy driver adapter: %v", err)
+		}
+	}()
 
 	listener, err := sockets.NewUnixSocket(unixEndpoint, 0)
 	if err != nil {

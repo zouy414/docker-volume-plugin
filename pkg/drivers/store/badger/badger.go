@@ -15,6 +15,7 @@ import (
 type ActionCallback func(volumeMetadata *apis.VolumeMetadata) error
 
 type DB struct {
+	logger               *log.Logger
 	path                 string
 	flock                *flock.Flock
 	defaultBadgerOptions badger.Options
@@ -24,6 +25,7 @@ func NewBadgerDB(logger *log.Logger, path string, lock string) *DB {
 	defaultBadgerOptions := badger.DefaultOptions(path)
 	defaultBadgerOptions.Logger = logger
 	return &DB{
+		logger:               logger,
 		path:                 path,
 		flock:                flock.New(lock),
 		defaultBadgerOptions: defaultBadgerOptions,
@@ -35,13 +37,21 @@ func (b *DB) CreateVolumeMetadata(name string, action ActionCallback) error {
 	if err != nil {
 		return fmt.Errorf("failed to get flock: %v", err)
 	}
-	defer b.flock.Unlock()
+	defer func() {
+		if err := b.flock.Unlock(); err != nil {
+			b.logger.Errorf("failed to unlock flock: %v", err)
+		}
+	}()
 
 	db, err := badger.Open(b.defaultBadgerOptions)
 	if err != nil {
 		return fmt.Errorf("failed to open badger database: %v", err)
 	}
-	defer db.Close()
+	defer func() {
+		if err := db.Close(); err != nil {
+			b.logger.Errorf("failed to close badger database: %v", err)
+		}
+	}()
 
 	err = db.View(func(txn *badger.Txn) error {
 		item, err := txn.Get([]byte(name))
@@ -84,13 +94,21 @@ func (b *DB) GetVolumeMetadata(name string) (*apis.VolumeMetadata, error) {
 	if err != nil {
 		return &apis.VolumeMetadata{}, fmt.Errorf("failed to get flock: %v", err)
 	}
-	defer b.flock.Unlock()
+	defer func() {
+		if err := b.flock.Unlock(); err != nil {
+			b.logger.Errorf("failed to unlock flock: %v", err)
+		}
+	}()
 
 	db, err := badger.Open(b.defaultBadgerOptions)
 	if err != nil {
 		return &apis.VolumeMetadata{}, fmt.Errorf("failed to open badger database: %v", err)
 	}
-	defer db.Close()
+	defer func() {
+		if err := db.Close(); err != nil {
+			b.logger.Errorf("failed to close badger database: %v", err)
+		}
+	}()
 
 	return getVolumeMetadata(db, name)
 }
@@ -102,13 +120,21 @@ func (b *DB) GetVolumeMetadataMap() (map[string]*apis.VolumeMetadata, error) {
 	if err != nil {
 		return volumeMetadataMap, nil
 	}
-	defer b.flock.Unlock()
+	defer func() {
+		if err := b.flock.Unlock(); err != nil {
+			b.logger.Errorf("failed to unlock flock: %v", err)
+		}
+	}()
 
 	db, err := badger.Open(b.defaultBadgerOptions)
 	if err != nil {
 		return volumeMetadataMap, fmt.Errorf("failed to open badger database: %v", err)
 	}
-	defer db.Close()
+	defer func() {
+		if err := db.Close(); err != nil {
+			b.logger.Errorf("failed to close badger database: %v", err)
+		}
+	}()
 
 	err = db.View(func(txn *badger.Txn) error {
 		it := txn.NewIterator(badger.DefaultIteratorOptions)
@@ -137,13 +163,21 @@ func (b *DB) SetVolumeMetadata(name string, action ActionCallback) error {
 	if err != nil {
 		return fmt.Errorf("failed to get flock: %v", err)
 	}
-	defer b.flock.Unlock()
+	defer func() {
+		if err := b.flock.Unlock(); err != nil {
+			b.logger.Errorf("failed to unlock flock: %v", err)
+		}
+	}()
 
 	db, err := badger.Open(b.defaultBadgerOptions)
 	if err != nil {
 		return fmt.Errorf("failed to open badger database: %v", err)
 	}
-	defer db.Close()
+	defer func() {
+		if err := db.Close(); err != nil {
+			b.logger.Errorf("failed to close badger database: %v", err)
+		}
+	}()
 
 	txn := db.NewTransaction(true)
 	defer txn.Discard()
@@ -176,13 +210,21 @@ func (b *DB) DeleteVolumeMetadata(name string, action ActionCallback) error {
 	if err != nil {
 		return fmt.Errorf("failed to get flock: %v", err)
 	}
-	defer b.flock.Unlock()
+	defer func() {
+		if err := b.flock.Unlock(); err != nil {
+			b.logger.Errorf("failed to unlock flock: %v", err)
+		}
+	}()
 
 	db, err := badger.Open(b.defaultBadgerOptions)
 	if err != nil {
 		return fmt.Errorf("failed to open badger database: %v", err)
 	}
-	defer db.Close()
+	defer func() {
+		if err := db.Close(); err != nil {
+			b.logger.Errorf("failed to close badger database: %v", err)
+		}
+	}()
 
 	volumeMetadata, err := getVolumeMetadata(db, name)
 	if err != nil {
