@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"strconv"
 	"sync"
 	"time"
 )
@@ -73,25 +74,39 @@ type nfs struct {
 	lock     *sync.RWMutex
 }
 
-func (n *nfs) Create(name string, options map[string]string) error {
+func (n *nfs) Create(name string, options map[string]string) (err error) {
 	n.lock.Lock()
 	defer n.lock.Unlock()
 
+	purgeAfterDelete := n.opts.PurgeAfterDelete
+	for key, value := range options {
+		switch key {
+		case "purgeAfterDelete":
+			purgeAfterDelete, err = strconv.ParseBool(value)
+			if err != nil {
+				return fmt.Errorf("invalid value for purgeAfterDelete: %v", err)
+			}
+		default:
+			return fmt.Errorf("unknown option %s with value %s, ignoring", key, value)
+		}
+	}
+
 	n.logger.Infof("create volume %s", name)
 
-	return n.db.CreateVolumeMetadata(
-		name,
-		func(volumeMetadata *apis.VolumeMetadata) error {
-			*volumeMetadata = apis.VolumeMetadata{
-				Mountpoint: path.Join(name, "_data"),
-				CreatedAt:  time.Now(),
-				Status: &apis.VolumeStatus{
-					MountBy: "",
-				},
-			}
+	return n.db.CreateVolumeMetadata(name, func(volumeMetadata *apis.VolumeMetadata) error {
+		*volumeMetadata = apis.VolumeMetadata{
+			Mountpoint: path.Join(name, "_data"),
+			CreatedAt:  time.Now(),
+			Spec: &apis.VolumeSpec{
+				PurgeAfterDelete: purgeAfterDelete,
+			},
+			Status: &apis.VolumeStatus{
+				MountBy: "",
+			},
+		}
 
-			return os.MkdirAll(path.Join(n.rootPath, volumeMetadata.Mountpoint), 0755)
-		},
+		return os.MkdirAll(path.Join(n.rootPath, volumeMetadata.Mountpoint), 0755)
+	},
 	)
 }
 
@@ -123,7 +138,7 @@ func (n *nfs) Remove(name string) error {
 			return fmt.Errorf("volume %s is mounted by %s, unmount it before removing", name, volumeMetadata.Status.MountBy)
 		}
 
-		if n.opts.PurgeAfterDelete {
+		if volumeMetadata.Spec.PurgeAfterDelete {
 			err := os.RemoveAll(path.Join(n.rootPath, name))
 			if err != nil {
 				return fmt.Errorf("failed to remove volume data: %v", err)

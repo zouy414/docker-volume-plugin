@@ -10,8 +10,7 @@ import (
 
 var localNFSServerDriverOptions string = `{
 	"address": "nfs-server.mock",
-	"remotePath": "/mock",
-	"purgeAfterDelete": true
+	"remotePath": "/mock"
 }`
 
 func TestNFSDriver(t *testing.T) {
@@ -30,7 +29,7 @@ func TestNFSDriver(t *testing.T) {
 	}()
 
 	// Test Create
-	err = driver.Create("test", nil)
+	err = driver.Create("test", map[string]string{"purgeAfterDelete": "true"})
 	if err != nil {
 		t.Fatalf("got error when create volume test for nfs driver: %v", err)
 	}

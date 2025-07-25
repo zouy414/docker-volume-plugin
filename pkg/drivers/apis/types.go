@@ -25,6 +25,10 @@ type Driver interface {
 	Destroy() error
 }
 
+type VolumeSpec struct {
+	PurgeAfterDelete bool `json:"purgeAfterDelete,omitempty"`
+}
+
 type VolumeStatus struct {
 	MountBy string `json:"mountBy,omitempty"`
 }
@@ -32,5 +36,6 @@ type VolumeStatus struct {
 type VolumeMetadata struct {
 	Mountpoint string        `json:"mountpoint,omitempty"`
 	CreatedAt  time.Time     `json:"createAt"`
+	Spec       *VolumeSpec   `json:"spec,omitempty"`
 	Status     *VolumeStatus `json:"status,omitempty"`
 }
