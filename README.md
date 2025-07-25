@@ -29,6 +29,8 @@ $ docker volume create --driver docker-volume-plugin sample
 volumes:
   sample:
     driver: docker-volume-plugin
+    driver_opts:
+      purgeAfterDelete: "true" # optional
 ```
 
 ### How to Upgrade
@@ -41,4 +43,4 @@ volumes:
 
 |Name|Driver|Options|
 |:-|:-|:-|
-|NFS|nfs|[NFS-Driver-Options.md](docs/NFS-Driver-Options.md)|
+|NFS|nfs|[NFS-Driver.md](docs/NFS-Driver.md)|

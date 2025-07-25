@@ -1,4 +1,9 @@
-# NFS Driver Options
+# NFS Driver
+
+When a volume is created, this driver will automatically create the corresponding folder on the NFS Server
+and provide a mountpoint locally.
+
+**NOTE**: This driver requires `flock` feature, so it only supports NFSv4.
 
 ## Driver Options
 
