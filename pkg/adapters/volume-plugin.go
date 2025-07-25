@@ -34,7 +34,7 @@ func NewVolumePlugin(ctx context.Context, logger *log.Logger, driver string, dri
 
 func (d *VolumePlugin) Create(req *volume.CreateRequest) error {
 	err := d.driverInstance.Create(req.Name, req.Options)
-	if strings.Contains(err.Error(), "already created") {
+	if err != nil && strings.Contains(err.Error(), "already created") {
 		d.logger.Infof("volume %s already exists, skipping creation", req.Name)
 		return nil
 	}
