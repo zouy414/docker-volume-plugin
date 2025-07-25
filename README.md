@@ -10,7 +10,7 @@ NFS volume plugin for docker
 ### Install
 
 ```sh
-$ make plugin # or `docker plugin install --alias docker-volume-plugin zouyu613/docker-volume-plugin:<tag> --grant-all-permissions --disable`
+$ make image plugin # or `docker plugin install --alias docker-volume-plugin zouyu613/docker-volume-plugin:<tag> --grant-all-permissions --disable`
 $ docker plugin set docker-volume-plugin DRIVER=nfs DRIVER_OPTIONS='{"address":"nfs-server.example.com","remotePath":"/exported/path"}'
 $ docker plugin enable docker-volume-plugin
 ```

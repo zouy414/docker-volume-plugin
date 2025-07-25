@@ -18,13 +18,15 @@ jobs:
       PLUGIN: docker-volume-plugin
     steps:
       - uses: actions/checkout@v4
-      - name: Build ${{ env.PLUGIN }}
+      - name: Build the Docker image
+        run: IMAGE=${{ env.REGISTRY }}/${{ env.PLUGIN }} TAG=${{ github.ref_name }} make image
+      - name: Build the Docker plugin
         run: IMAGE=${{ env.REGISTRY }}/${{ env.PLUGIN }} TAG=${{ github.ref_name }} make plugin
-      - name: Log into registry ${{ env.REGISTRY }}
+      - name: Log into registry
         uses: docker/login-action@343f7c4344506bcbf9b4de18042ae17996df046d
         with:
           registry: docker.io
           username: ${{ env.REGISTRY }}
           password: ${{ secrets.RELEASE_ACTION_TOKEN }}
-      - name: Push image
+      - name: Push the Docker plugin
         run: docker plugin push ${{ env.REGISTRY }}/${{ env.PLUGIN }}:${{ github.ref_name }}

@@ -27,7 +27,7 @@ image: #@help Build image
 		--build-arg https_proxy=$(https_proxy) \
 		-f cmd/$(PLUGIN)/Dockerfile .
 
-plugin: image #@help Create docker plugin
+plugin: #@help Create docker plugin from image
 	docker plugin disable -f $(IMAGE):$(TAG) || echo "plugin already disabled"
 	docker plugin rm -f $(IMAGE):$(TAG) || echo "plugin already removed"
 	rm -rf bin/plugin
