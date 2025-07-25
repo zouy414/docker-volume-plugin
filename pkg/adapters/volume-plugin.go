@@ -126,7 +126,7 @@ func (d *VolumePlugin) Unmount(req *volume.UnmountRequest) error {
 }
 
 func (d *VolumePlugin) Capabilities() *volume.CapabilitiesResponse {
-	return &volume.CapabilitiesResponse{Capabilities: volume.Capability{Scope: "local"}}
+	return &volume.CapabilitiesResponse{Capabilities: volume.Capability{Scope: "global"}}
 }
 
 func (d *VolumePlugin) Destroy() error {
