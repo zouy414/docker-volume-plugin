@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"slices"
 	"strconv"
 	"sync"
 	"time"
@@ -50,8 +51,9 @@ func nfsFactory(ctx context.Context, logger *log.Logger, propagatedMountpoint st
 			path.Join(propagatedMountpoint, "metadata.db"),
 			path.Join(propagatedMountpoint, "metadata.db.lock"),
 		),
-		rootPath: propagatedMountpoint,
-		lock:     &sync.RWMutex{},
+		rootPath:     propagatedMountpoint,
+		lock:         &sync.RWMutex{},
+		reservedPath: []string{"metadata.db", "metadata.db.lock"},
 	}, nil
 }
 
@@ -67,16 +69,21 @@ type nfsOptions struct {
 }
 
 type nfs struct {
-	logger   *log.Logger
-	opts     *nfsOptions
-	db       *badger.DB
-	rootPath string
-	lock     *sync.RWMutex
+	logger       *log.Logger
+	opts         *nfsOptions
+	db           *badger.DB
+	rootPath     string
+	lock         *sync.RWMutex
+	reservedPath []string
 }
 
 func (n *nfs) Create(name string, options map[string]string) (err error) {
 	n.lock.Lock()
 	defer n.lock.Unlock()
+
+	if slices.Contains(n.reservedPath, name) {
+		return fmt.Errorf("volume name %s is reserved, please choose a different name", name)
+	}
 
 	purgeAfterDelete := n.opts.PurgeAfterDelete
 	for key, value := range options {
