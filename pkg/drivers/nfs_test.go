@@ -15,13 +15,17 @@ var localNFSServerDriverOptions string = `{
 }`
 
 func TestNFSDriver(t *testing.T) {
-	driver, err := New(context.Background(), log.New("test-nfs"), "nfs", path.Join(os.TempDir(), "net-volume-nfs"), localNFSServerDriverOptions)
+	propagatedMountpoint := path.Join(os.TempDir(), "net-volume-nfs-test")
+	driver, err := New(context.Background(), log.New("test-nfs"), "nfs", propagatedMountpoint, localNFSServerDriverOptions)
 	if err != nil {
 		t.Fatalf("got error when new nfs driver: %v", err)
 	}
 	defer func() {
 		if err := driver.Destroy(); err != nil {
 			t.Errorf("got error when destroy nfs driver: %v", err)
+		}
+		if err := os.RemoveAll(propagatedMountpoint); err != nil {
+			t.Errorf("got error when remove propagated mountpoint %s: %v", propagatedMountpoint, err)
 		}
 	}()
 
