@@ -7,7 +7,7 @@
     "env": [
         {
             "name": "UNIX_ENDPOINT",
-            "value": "/run/docker/plugins/net-volume.sock"
+            "value": "/run/docker/plugins/dvp.sock"
         },
         {
             "name": "LOG_LEVEL",
@@ -35,7 +35,7 @@
         "types": [
             "docker.volumedriver/1.0"
         ],
-        "socket": "docker-volume-plugin.sock"
+        "socket": "dvp.sock"
     },
     "linux": {
         "capabilities": [
