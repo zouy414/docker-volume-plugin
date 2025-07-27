@@ -10,7 +10,7 @@ NFS volume plugin for docker
 ### Install
 
 ```sh
-$ make image plugin # or `docker plugin install --alias docker-volume-plugin zouyu613/docker-volume-plugin:<tag> --grant-all-permissions --disable`
+$ make image plugin # or install release version by `docker plugin install --alias docker-volume-plugin zouyu613/docker-volume-plugin:<tag> --grant-all-permissions --disable`
 $ docker plugin set docker-volume-plugin DRIVER=nfs DRIVER_OPTIONS='{"address":"nfs-server.example.com","remotePath":"/exported/path"}'
 $ docker plugin enable docker-volume-plugin
 ```
@@ -33,11 +33,12 @@ volumes:
       purgeAfterDelete: "true" # optional
 ```
 
-### How to Upgrade
+### Upgrade
 
 1. Drain target node by `docker node update <target-node> --availability drain`
-2. Wait for the node to drain and then execute `docker plugin disable -f docker-volume-plugin`
-3. Upgrade plugin by `docker plugin upgrade`
+2. Wait for the node to drain and then disable plugin by `docker plugin disable docker-volume-plugin`
+3. Upgrade plugin by `docker plugin upgrade docker-volume-plugin zouyu613/docker-volume-plugin:<tag> --grant-all-permissions`
+4. Enable plugin by `docker plugin enable docker-volume-plugin`
 
 ## Supported Net Volumes
 
