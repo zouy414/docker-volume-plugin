@@ -22,8 +22,9 @@ func init() {
 
 func nfsFactory(ctx context.Context, logger *log.Logger, propagatedMountpoint string, driverOptions string) (apis.Driver, error) {
 	opts := &nfsOptions{
-		PurgeAfterDelete: false,
-		MountOptions:     []string{"nfsvers=4", "rw", "noatime", "rsize=8192", "wsize=8192", "tcp", "timeo=14", "sync"},
+		MountOptions:       []string{"nfsvers=4", "rw", "noatime", "rsize=8192", "wsize=8192", "tcp", "timeo=14", "sync"},
+		PurgeAfterDelete:   false,
+		AllowMultipleMount: true,
 	}
 	err := json.Unmarshal([]byte(driverOptions), opts)
 	if err != nil {
@@ -66,6 +67,8 @@ type nfsOptions struct {
 	MountOptions []string `json:"mountOptions,omitempty"`
 	// PurgeAfterDelete indicates whether to purge the volume data after deletion
 	PurgeAfterDelete bool `json:"purgeAfterDelete,omitempty"`
+	// AllowMultipleMount indicates whether to allow multiple containers to mount the same volume
+	AllowMultipleMount bool `json:"allowMultipleMount,omitempty"`
 }
 
 type nfs struct {
@@ -86,12 +89,18 @@ func (n *nfs) Create(name string, options map[string]string) (err error) {
 	}
 
 	purgeAfterDelete := n.opts.PurgeAfterDelete
+	allowMultipleMount := n.opts.AllowMultipleMount
 	for key, value := range options {
 		switch key {
 		case "purgeAfterDelete":
 			purgeAfterDelete, err = strconv.ParseBool(value)
 			if err != nil {
 				return fmt.Errorf("invalid value for purgeAfterDelete: %v", err)
+			}
+		case "allowMultipleMount":
+			allowMultipleMount, err = strconv.ParseBool(value)
+			if err != nil {
+				return fmt.Errorf("invalid value for allowMultipleMount: %v", err)
 			}
 		default:
 			return fmt.Errorf("unknown option %s with value %s, ignoring", key, value)
@@ -105,7 +114,8 @@ func (n *nfs) Create(name string, options map[string]string) (err error) {
 			Mountpoint: path.Join(name, "_data"),
 			CreatedAt:  time.Now(),
 			Spec: &apis.VolumeSpec{
-				PurgeAfterDelete: purgeAfterDelete,
+				PurgeAfterDelete:   purgeAfterDelete,
+				AllowMultipleMount: allowMultipleMount,
 			},
 			Status: &apis.VolumeStatus{
 				MountBy: []string{},
@@ -172,7 +182,7 @@ func (n *nfs) Mount(name string, id string) (string, error) {
 
 	n.logger.Infof("mount volume %s for %s", name, id)
 	return path.Join(name, "_data"), n.db.SetVolumeMetadata(name, func(volumeMetadata *apis.VolumeMetadata) error {
-		if slices.Contains(volumeMetadata.Status.MountBy, id) {
+		if (!volumeMetadata.Spec.AllowMultipleMount && len(volumeMetadata.Status.MountBy) != 0) || slices.Contains(volumeMetadata.Status.MountBy, id) {
 			return fmt.Errorf("volume %s is already mounted", name)
 		}
 

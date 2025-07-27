@@ -10,7 +10,9 @@ import (
 
 var localNFSServerDriverOptions string = `{
 	"address": "nfs-server.mock",
-	"remotePath": "/mock"
+	"remotePath": "/mock",
+	"purgeAfterDelete": true,
+	"allowMultipleMount": true
 }`
 
 func TestNFSDriver(t *testing.T) {

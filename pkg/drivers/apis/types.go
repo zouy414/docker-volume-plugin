@@ -33,7 +33,8 @@ type VolumeMetadata struct {
 }
 
 type VolumeSpec struct {
-	PurgeAfterDelete bool `json:"purgeAfterDelete,omitempty"`
+	PurgeAfterDelete   bool `json:"purgeAfterDelete,omitempty"`
+	AllowMultipleMount bool `json:"allowMultipleMount,omitempty"`
 }
 
 type VolumeStatus struct {
