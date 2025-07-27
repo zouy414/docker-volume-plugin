@@ -168,7 +168,7 @@ func (n *nfs) Mount(name string, id string) (string, error) {
 	n.logger.Infof("mount volume %s for %s", name, id)
 	return path.Join(name, "_data"), n.db.SetVolumeMetadata(name, func(volumeMetadata *apis.VolumeMetadata) error {
 		if (!volumeMetadata.Spec.AllowMultipleMount && len(volumeMetadata.Status.MountBy) != 0) || slices.Contains(volumeMetadata.Status.MountBy, id) {
-			return fmt.Errorf("volume %s is already mounted", name)
+			return fmt.Errorf("volume %s is already mount by %s", name, id)
 		}
 
 		volumeMetadata.Status.MountBy = append(volumeMetadata.Status.MountBy, id)
