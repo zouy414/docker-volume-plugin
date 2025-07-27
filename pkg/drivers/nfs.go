@@ -27,19 +27,19 @@ func nfsFactory(ctx context.Context, logger *log.Logger, propagatedMountpoint st
 	}
 	err := json.Unmarshal([]byte(driverOptions), opts)
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse driver options: %v", err)
+		return nil, fmt.Errorf("failed to parse driver options: %s", err)
 	}
 
 	// Mount NFS share to a local mount point
 	err = os.MkdirAll(propagatedMountpoint, 0755)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create NFS mount point directory: %v", err)
+		return nil, fmt.Errorf("failed to create NFS mount point directory: %s", err)
 	}
 
 	if opts.Address != "nfs-server.mock" {
 		err = utils.MountNFS(opts.Address, opts.RemotePath, propagatedMountpoint, opts.MountOptions)
 		if err != nil {
-			return nil, fmt.Errorf("failed to mount NFS share: %v", err)
+			return nil, fmt.Errorf("failed to mount NFS share: %s", err)
 		}
 	}
 
@@ -143,7 +143,7 @@ func (n *nfs) Remove(name string) error {
 		if volumeMetadata.Spec.PurgeAfterDelete {
 			err := os.RemoveAll(path.Join(n.rootPath, name))
 			if err != nil {
-				return fmt.Errorf("failed to remove volume data: %v", err)
+				return fmt.Errorf("failed to remove volume data: %s", err)
 			}
 		}
 		return nil
@@ -168,7 +168,7 @@ func (n *nfs) Mount(name string, id string) (string, error) {
 	n.logger.Infof("mount volume %s for %s", name, id)
 	return path.Join(name, "_data"), n.db.SetVolumeMetadata(name, func(volumeMetadata *apis.VolumeMetadata) error {
 		if (!volumeMetadata.Spec.AllowMultipleMount && len(volumeMetadata.Status.MountBy) != 0) || slices.Contains(volumeMetadata.Status.MountBy, id) {
-			return fmt.Errorf("volume %s is already mount by %s", name, id)
+			return fmt.Errorf("volume %s is already mounted", name)
 		}
 
 		volumeMetadata.Status.MountBy = append(volumeMetadata.Status.MountBy, id)
@@ -184,7 +184,7 @@ func (n *nfs) Unmount(name string, id string) error {
 
 	return n.db.SetVolumeMetadata(name, func(volumeMetadata *apis.VolumeMetadata) error {
 		if !slices.Contains(volumeMetadata.Status.MountBy, id) {
-			return fmt.Errorf("volume %s is not mount by %v", name, id)
+			return fmt.Errorf("volume %s is not mounted by %s", name, id)
 		}
 
 		volumeMetadata.Status.MountBy = slices.DeleteFunc(volumeMetadata.Status.MountBy, func(mountID string) bool { return mountID == id })
@@ -195,13 +195,13 @@ func (n *nfs) Unmount(name string, id string) error {
 func (n *nfs) Destroy() error {
 	err := n.db.Close()
 	if err != nil {
-		n.logger.Warningf("failed to close badger db: %v", err)
+		n.logger.Warningf("failed to close badger db: %s", err)
 	}
 
 	if n.opts.Address != "nfs-server.mock" {
 		err = utils.Umount(n.rootPath)
 		if err != nil {
-			return fmt.Errorf("failed to unmount NFS mount root path %s: %v", n.rootPath, err)
+			return fmt.Errorf("failed to unmount NFS mount root path %s: %s", n.rootPath, err)
 		}
 	}
 
