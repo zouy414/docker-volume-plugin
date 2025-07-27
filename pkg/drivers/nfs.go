@@ -108,7 +108,7 @@ func (n *nfs) Create(name string, options map[string]string) (err error) {
 				PurgeAfterDelete: purgeAfterDelete,
 			},
 			Status: &apis.VolumeStatus{
-				MountBy: "",
+				MountBy: []string{},
 			},
 		}
 
@@ -172,11 +172,11 @@ func (n *nfs) Mount(name string, id string) (string, error) {
 
 	n.logger.Infof("mount volume %s for %s", name, id)
 	return path.Join(name, "_data"), n.db.SetVolumeMetadata(name, func(volumeMetadata *apis.VolumeMetadata) error {
-		if len(volumeMetadata.Status.MountBy) != 0 {
+		if slices.Contains(volumeMetadata.Status.MountBy, id) {
 			return fmt.Errorf("volume %s is already mounted", name)
 		}
 
-		volumeMetadata.Status.MountBy = id
+		volumeMetadata.Status.MountBy = append(volumeMetadata.Status.MountBy, id)
 		return nil
 	})
 }
@@ -188,15 +188,11 @@ func (n *nfs) Unmount(name string, id string) error {
 	n.logger.Infof("unmount volume %s from %s", name, id)
 
 	return n.db.SetVolumeMetadata(name, func(volumeMetadata *apis.VolumeMetadata) error {
-		if len(volumeMetadata.Status.MountBy) == 0 {
-			return fmt.Errorf("volume %s is not mounted", name)
+		if !slices.Contains(volumeMetadata.Status.MountBy, id) {
+			return fmt.Errorf("volume %s is not mount by %v", name, id)
 		}
 
-		if volumeMetadata.Status.MountBy != id {
-			return fmt.Errorf("volume %s already mounted by %s", name, volumeMetadata.Status.MountBy)
-		}
-
-		volumeMetadata.Status.MountBy = ""
+		volumeMetadata.Status.MountBy = slices.DeleteFunc(volumeMetadata.Status.MountBy, func(mountID string) bool { return mountID == id })
 		return nil
 	})
 }
