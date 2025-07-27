@@ -11,7 +11,6 @@ import (
 	"os"
 	"path"
 	"slices"
-	"strconv"
 	"sync"
 	"time"
 )
@@ -80,7 +79,7 @@ type nfs struct {
 	reservedPath []string
 }
 
-func (n *nfs) Create(name string, options map[string]string) (err error) {
+func (n *nfs) Create(name string, options map[string]string) error {
 	n.lock.Lock()
 	defer n.lock.Unlock()
 
@@ -88,23 +87,12 @@ func (n *nfs) Create(name string, options map[string]string) (err error) {
 		return fmt.Errorf("volume name %s is reserved, please choose a different name", name)
 	}
 
-	purgeAfterDelete := n.opts.PurgeAfterDelete
-	allowMultipleMount := n.opts.AllowMultipleMount
-	for key, value := range options {
-		switch key {
-		case "purgeAfterDelete":
-			purgeAfterDelete, err = strconv.ParseBool(value)
-			if err != nil {
-				return fmt.Errorf("invalid value for purgeAfterDelete: %v", err)
-			}
-		case "allowMultipleMount":
-			allowMultipleMount, err = strconv.ParseBool(value)
-			if err != nil {
-				return fmt.Errorf("invalid value for allowMultipleMount: %v", err)
-			}
-		default:
-			return fmt.Errorf("unknown option %s with value %s, ignoring", key, value)
-		}
+	spec := apis.VolumeSpec{
+		PurgeAfterDelete:   n.opts.PurgeAfterDelete,
+		AllowMultipleMount: n.opts.AllowMultipleMount,
+	}
+	if err := spec.Unmarshal(options); err != nil {
+		return err
 	}
 
 	n.logger.Infof("create volume %s", name)
@@ -113,10 +101,7 @@ func (n *nfs) Create(name string, options map[string]string) (err error) {
 		*volumeMetadata = apis.VolumeMetadata{
 			Mountpoint: path.Join(name, "_data"),
 			CreatedAt:  time.Now(),
-			Spec: &apis.VolumeSpec{
-				PurgeAfterDelete:   purgeAfterDelete,
-				AllowMultipleMount: allowMultipleMount,
-			},
+			Spec:       &spec,
 			Status: &apis.VolumeStatus{
 				MountBy: []string{},
 			},

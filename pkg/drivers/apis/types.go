@@ -1,6 +1,8 @@
 package apis
 
 import (
+	"fmt"
+	"strconv"
 	"time"
 )
 
@@ -35,6 +37,27 @@ type VolumeMetadata struct {
 type VolumeSpec struct {
 	PurgeAfterDelete   bool `json:"purgeAfterDelete,omitempty"`
 	AllowMultipleMount bool `json:"allowMultipleMount,omitempty"`
+}
+
+func (spec *VolumeSpec) Unmarshal(data map[string]string) (err error) {
+	for key, value := range data {
+		switch key {
+		case "purgeAfterDelete":
+			spec.PurgeAfterDelete, err = strconv.ParseBool(value)
+			if err != nil {
+				return fmt.Errorf("invalid value for purgeAfterDelete: %v", err)
+			}
+		case "allowMultipleMount":
+			spec.AllowMultipleMount, err = strconv.ParseBool(value)
+			if err != nil {
+				return fmt.Errorf("invalid value for allowMultipleMount: %v", err)
+			}
+		default:
+			return fmt.Errorf("unknown option %s with value %s", key, value)
+		}
+	}
+
+	return nil
 }
 
 type VolumeStatus struct {
