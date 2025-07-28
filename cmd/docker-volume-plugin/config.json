@@ -1,15 +1,27 @@
 {
-    "description": "Net Volume Driver for Docker Swarm",
-    "documentation": "",
+    "description": "Net Volume Plugin for Docker Swarm",
+    "documentation": "https://github.com/zouy414/docker-volume-plugin",
+    "interface": {
+        "types": [
+            "docker.volumedriver/1.0"
+        ],
+        "socket": "dvp.sock"
+    },
     "entrypoint": [
         "/docker-volume-plugin"
     ],
+    "network": {
+        "type": "host"
+    },
+    "propagatedMount": "/var/lib/docker-volumes",
     "env": [
         {
+            "description": "The path of the socket the engine should use to communicate with the plugins",
             "name": "UNIX_ENDPOINT",
             "value": "/run/docker/plugins/dvp.sock"
         },
         {
+            "description": "The log level for the plugin",
             "name": "LOG_LEVEL",
             "settable": [
                 "value"
@@ -17,6 +29,7 @@
             "value": "info"
         },
         {
+            "description": "The driver name for the volume plugin",
             "name": "DRIVER",
             "settable": [
                 "value"
@@ -24,6 +37,7 @@
             "value": "nfs"
         },
         {
+            "description": "The options for specified driver",
             "name": "DRIVER_OPTIONS",
             "settable": [
                 "value"
@@ -31,20 +45,11 @@
             "value": "{\"address\": \"nfs-server.example.com\", \"remotePath\": \"/exported/path\"}"
         }
     ],
-    "interface": {
-        "types": [
-            "docker.volumedriver/1.0"
-        ],
-        "socket": "dvp.sock"
-    },
     "linux": {
         "capabilities": [
             "CAP_SYS_ADMIN"
-        ]
-    },
-    "mounts": [],
-    "network": {
-        "type": "host"
-    },
-    "propagatedMount": "/var/lib/docker-volumes"
+        ],
+        "allowAllDevices": false,
+        "devices": []
+    }
 }
