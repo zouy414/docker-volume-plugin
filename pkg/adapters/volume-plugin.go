@@ -7,6 +7,7 @@ import (
 	"docker-volume-plugin/pkg/log"
 	"path"
 	"strings"
+	"time"
 
 	"github.com/docker/go-plugins-helpers/volume"
 )
@@ -15,7 +16,6 @@ type VolumePlugin struct {
 	driverInstance apis.Driver
 	logger         *log.Logger
 	mountpointBase string
-	timeFormat     string
 	volume.Driver
 }
 
@@ -29,7 +29,6 @@ func NewVolumePlugin(ctx context.Context, logger *log.Logger, driver string, dri
 		driverInstance: driverInstance,
 		logger:         logger,
 		mountpointBase: volume.DefaultDockerRootDirectory,
-		timeFormat:     "2006-01-02T15:04:05-07:00",
 	}, nil
 }
 
@@ -58,7 +57,7 @@ func (d *VolumePlugin) List() (*volume.ListResponse, error) {
 		listResponse.Volumes = append(listResponse.Volumes, &volume.Volume{
 			Name:       name,
 			Mountpoint: path.Join(d.mountpointBase, metadata.Mountpoint),
-			CreatedAt:  metadata.CreatedAt.Local().Format(d.timeFormat),
+			CreatedAt:  metadata.CreatedAt.Local().Format(time.RFC3339),
 			Status: map[string]interface{}{
 				"mountBy": metadata.Status.MountBy,
 			},
@@ -82,7 +81,7 @@ func (d *VolumePlugin) Get(req *volume.GetRequest) (*volume.GetResponse, error) 
 	getResponse.Volume = &volume.Volume{
 		Name:       req.Name,
 		Mountpoint: path.Join(d.mountpointBase, metadata.Mountpoint),
-		CreatedAt:  metadata.CreatedAt.Local().Format(d.timeFormat),
+		CreatedAt:  metadata.CreatedAt.Local().Format(time.RFC3339),
 		Status: map[string]interface{}{
 			"mountBy": metadata.Status.MountBy,
 		},
