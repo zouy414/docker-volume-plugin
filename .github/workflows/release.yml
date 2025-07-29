@@ -5,7 +5,8 @@ on:
     tags: ["v*.*.*"]
 
 env:
-  REGISTRY: zouyu613 # ghcr.io
+  # REGISTRY: ghcr.io
+  REGISTRY: zouyu613
 
 jobs:
   docker-volume-plugin:
