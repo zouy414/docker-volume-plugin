@@ -1,7 +1,6 @@
 package badger
 
 import (
-	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -76,7 +75,7 @@ func (b *DB) CreateVolumeMetadata(name string, action ActionCallback) error {
 		return fmt.Errorf("failed to execute action: %v", err)
 	}
 
-	value, err := json.Marshal(volumeMetadata)
+	value, err := volumeMetadata.Marshal()
 	if err != nil {
 		return fmt.Errorf("failed to marshal volume metadata: %v", err)
 	}
@@ -144,7 +143,7 @@ func (b *DB) GetVolumeMetadataMap() (map[string]*apis.VolumeMetadata, error) {
 			item := it.Item()
 
 			volumeMetadata := &apis.VolumeMetadata{}
-			err = item.Value(func(val []byte) error { return json.Unmarshal(val, volumeMetadata) })
+			err = item.Value(func(val []byte) error { return volumeMetadata.Unmarshal(val) })
 			if err != nil {
 				return err
 			}
@@ -192,7 +191,7 @@ func (b *DB) SetVolumeMetadata(name string, action ActionCallback) error {
 		return fmt.Errorf("failed to execute action: %v", err)
 	}
 
-	value, err := json.Marshal(volumeMetadata)
+	value, err := volumeMetadata.Marshal()
 	if err != nil {
 		return fmt.Errorf("failed to marshal volume metadata: %v", err)
 	}
@@ -262,7 +261,7 @@ func getVolumeMetadata(db *badger.DB, name string) (*apis.VolumeMetadata, error)
 		if item == nil {
 			return fmt.Errorf("volume %s not found", name)
 		}
-		return item.Value(func(val []byte) error { return json.Unmarshal(val, volumeMetadata) })
+		return item.Value(func(val []byte) error { return volumeMetadata.Unmarshal(val) })
 	})
 
 	return volumeMetadata, err

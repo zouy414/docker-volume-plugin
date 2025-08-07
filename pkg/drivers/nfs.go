@@ -158,11 +158,11 @@ func (n *nfs) Mount(name string, id string) (string, error) {
 	defer n.lock.Unlock()
 
 	return path.Join(name, "_data"), n.db.SetVolumeMetadata(name, func(volumeMetadata *apis.VolumeMetadata) error {
-		if (!volumeMetadata.Spec.AllowMultipleMount && len(volumeMetadata.Status.MountBy) != 0) || slices.Contains(volumeMetadata.Status.MountBy, id) {
+		if (!volumeMetadata.Spec.AllowMultipleMount && volumeMetadata.Status.IsMounted()) || volumeMetadata.Status.IsMountedBy(id) {
 			return fmt.Errorf("volume %s is already mounted", name)
 		}
 
-		volumeMetadata.Status.MountBy = append(volumeMetadata.Status.MountBy, id)
+		volumeMetadata.Status.AddMount(id)
 		return nil
 	})
 }
@@ -172,11 +172,11 @@ func (n *nfs) Unmount(name string, id string) error {
 	defer n.lock.Unlock()
 
 	return n.db.SetVolumeMetadata(name, func(volumeMetadata *apis.VolumeMetadata) error {
-		if !slices.Contains(volumeMetadata.Status.MountBy, id) {
+		if !volumeMetadata.Status.IsMountedBy(id) {
 			return fmt.Errorf("volume %s is not mounted by %s", name, id)
 		}
 
-		volumeMetadata.Status.MountBy = slices.DeleteFunc(volumeMetadata.Status.MountBy, func(mountID string) bool { return mountID == id })
+		volumeMetadata.Status.RemoveMount(id)
 		return nil
 	})
 }
