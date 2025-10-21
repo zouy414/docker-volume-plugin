@@ -34,10 +34,10 @@ type Driver interface {
 }
 
 type VolumeMetadata struct {
-	Mountpoint string        `json:"mountpoint,omitempty"`
-	CreatedAt  time.Time     `json:"createAt"`
-	Spec       *VolumeSpec   `json:"spec"`
-	Status     *VolumeStatus `json:"status"`
+	Mountpoint string        `json:"mountpoint" validate:"required"`
+	CreatedAt  time.Time     `json:"createAt" validate:"required"`
+	Spec       *VolumeSpec   `json:"spec" validate:"required"`
+	Status     *VolumeStatus `json:"status" validate:"required"`
 }
 
 func (vm *VolumeMetadata) Marshal() (data []byte, err error) {
