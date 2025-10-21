@@ -1,4 +1,4 @@
-FROM registry.hub.docker.com/library/golang:1.23 AS builder
+FROM registry.hub.docker.com/library/golang:1.24 AS builder
 WORKDIR /workspace
 COPY . /workspace
 ENV EXECUTABLE=docker-volume-plugin
