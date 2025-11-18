@@ -4,9 +4,9 @@ ifneq (,$(wildcard .env))
 	export
 endif
 
-export PLUGIN ?= docker-volume-plugin #@variables The target plugin to run or build, supported: docker-volume-plugin
-export IMAGE ?= $(PLUGIN) #@variables The image name of builded image, default to plugin name
-export TAG ?= latest #@variables The tag of builded image
+export PLUGIN ?= docker-volume-plugin#@variables The target plugin to run or build, supported: docker-volume-plugin
+export IMAGE ?= $(PLUGIN)#@variables The image name of builded image, default to plugin name
+export TAG ?= latest#@variables The tag of builded image
 
 HELP_PREFIX = @help
 VARIABLES_PREFIX = @variables
@@ -40,8 +40,8 @@ image: #@help Build image
 
 .PHONY: plugin
 plugin: #@help Create docker plugin from image
-	sudo docker plugin disable -f $(IMAGE):$(TAG) || echo "plugin already disabled"
-	sudo docker plugin rm -f $(IMAGE):$(TAG) || echo "plugin already removed"
+	sudo docker plugin disable -f $(IMAGE):$(TAG) || echo "plugin $(IMAGE):$(TAG) already disabled"
+	sudo docker plugin rm -f $(IMAGE):$(TAG) || echo "plugin $(IMAGE):$(TAG) already removed"
 	rm -rf bin/plugin
 	mkdir -p bin/plugin/rootfs
 	sudo docker export $(shell sudo docker create $(IMAGE):$(TAG) --name plugin_$(PLUGIN)) | tar -x -C bin/plugin/rootfs
