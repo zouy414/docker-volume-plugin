@@ -24,8 +24,10 @@ run: #@help Run specified plugin on local
 	go run cmd/$(PLUGIN)/main.go
 
 .PHONY: build
-build: #@help Build binary
-	CGO_ENABLED=0 GO111MODULE=on go build -a -o bin/$(PLUGIN) cmd/$(PLUGIN)/main.go
+build: bin/$(PLUGIN) #@help Build binary
+
+bin/%:
+	CGO_ENABLED=0 GO111MODULE=on go build -a -o bin/$* cmd/$*/main.go
 
 .PHONY: image
 image: #@help Build image
