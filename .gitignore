@@ -23,3 +23,6 @@ coverage.html
 *.swp
 *.swo
 *~
+
+# User specially files
+.env

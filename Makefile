@@ -1,6 +1,12 @@
-PLUGIN ?= docker-volume-plugin#@variables The plugin of running
-IMAGE ?= $(PLUGIN)#@variables The image name of builded image
-TAG ?= latest#@variables The tag of builded image
+# Read user specially environment file
+ifneq (,$(wildcard .env))
+	include .env
+	export
+endif
+
+export PLUGIN ?= docker-volume-plugin #@variables The plugin of running
+export IMAGE ?= $(PLUGIN) #@variables The image name of builded image
+export TAG ?= latest #@variables The tag of builded image
 
 HELP_PREFIX = @help
 VARIABLES_PREFIX = @variables
@@ -9,9 +15,9 @@ VARIABLES_PREFIX = @variables
 help: #@help Display this help
 	@echo "Usage: make \033[36m<target>\033[0m"
 	@echo "Targets:"
-	@awk -F ':.*#$(HELP_PREFIX)' '/^[a-zA-Z0-9_-]+:.*#$(HELP_PREFIX)/ {printf "  \033[36m%-13s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+	@awk -F ':.*#$(HELP_PREFIX)' '/^.+:.*#$(HELP_PREFIX)/ {printf "    \033[36m%-23s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST) 2>/dev/null
 	@echo "Variables:"
-	@awk -F '?=.*#$(VARIABLES_PREFIX)' '/[a-zA-Z0-9_-]+ *\?=.*#$(VARIABLES_PREFIX)/ {var=$$1; gsub(/export +/, "", var); printf "  \033[36m%-23s\033[0m %s\n", var, $$2}' $(MAKEFILE_LIST)
+	@awk -F '\?=.*#$(VARIABLES_PREFIX)' '/export .+\?=.*#$(VARIABLES_PREFIX)/ {var=$$1; gsub(/export +/, "", var); printf "    \033[36m%-23s\033[0m %s\n", var, $$2}' $(MAKEFILE_LIST) 2>/dev/null
 
 run: #@help Run specified plugin on local
 	go run cmd/$(PLUGIN)/main.go
