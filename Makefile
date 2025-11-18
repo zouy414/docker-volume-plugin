@@ -34,11 +34,11 @@ image: #@help Build image
 		-f cmd/$(PLUGIN)/Dockerfile .
 
 plugin: #@help Create docker plugin from image
-	docker plugin disable -f $(IMAGE):$(TAG) || echo "plugin already disabled"
-	docker plugin rm -f $(IMAGE):$(TAG) || echo "plugin already removed"
+	sudo docker plugin disable -f $(IMAGE):$(TAG) || echo "plugin already disabled"
+	sudo docker plugin rm -f $(IMAGE):$(TAG) || echo "plugin already removed"
 	rm -rf bin/plugin
 	mkdir -p bin/plugin/rootfs
-	docker export $(shell sudo docker create $(IMAGE):$(TAG) --name plugin_$(PLUGIN)) | tar -x -C bin/plugin/rootfs
+	sudo docker export $(shell sudo docker create $(IMAGE):$(TAG) --name plugin_$(PLUGIN)) | tar -x -C bin/plugin/rootfs
 	cp cmd/docker-volume-plugin/config.json bin/plugin
 	sudo docker rm -vf plugin_$(PLUGIN)
 	sudo docker plugin create $(IMAGE):$(TAG) bin/plugin
