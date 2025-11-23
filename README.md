@@ -36,9 +36,10 @@ volumes:
 ### Upgrade
 
 1. Drain target node by `docker node update <target-node> --availability drain`
-2. Wait for the node to drain and then disable plugin by `docker plugin disable docker-volume-plugin`
+2. Wait for the node to drain and then disable plugin by `docker plugin disable docker-volume-plugin -f`
 3. Upgrade plugin by `docker plugin upgrade docker-volume-plugin zouyu613/docker-volume-plugin:<tag> --grant-all-permissions`
 4. Enable plugin by `docker plugin enable docker-volume-plugin`
+5. Active target node by `docker node update <target-node> --availability active`
 
 ## Supported Net Volumes
 
