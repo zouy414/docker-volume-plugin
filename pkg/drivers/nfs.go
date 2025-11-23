@@ -47,10 +47,9 @@ func nfsFactory(ctx context.Context, logger *log.Logger, propagatedMountpoint st
 	return &nfs{
 		logger: logger,
 		opts:   opts,
-		db: badger.NewBadgerDB(
+		db: badger.New(
 			logger.WithService("badger").WithLogLevel(log.WarnLevel),
 			path.Join(propagatedMountpoint, "metadata.db"),
-			path.Join(propagatedMountpoint, "metadata.db.lock"),
 		),
 		rootPath:     propagatedMountpoint,
 		lock:         &sync.RWMutex{},
@@ -107,8 +106,7 @@ func (n *nfs) Create(name string, options map[string]string) error {
 		}
 
 		return os.MkdirAll(path.Join(n.rootPath, volumeMetadata.Mountpoint), 0755)
-	},
-	)
+	})
 }
 
 func (n *nfs) List() (map[string]*apis.VolumeMetadata, error) {

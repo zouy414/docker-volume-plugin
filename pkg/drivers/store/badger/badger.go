@@ -14,20 +14,19 @@ import (
 type ActionCallback func(volumeMetadata *apis.VolumeMetadata) error
 
 type DB struct {
-	logger               *log.Logger
-	path                 string
-	flock                *flock.Flock
-	defaultBadgerOptions badger.Options
+	logger        *log.Logger
+	flock         *flock.Flock
+	badgerOptions badger.Options
 }
 
-func NewBadgerDB(logger *log.Logger, path string, lock string) *DB {
+func New(logger *log.Logger, path string) *DB {
 	defaultBadgerOptions := badger.DefaultOptions(path)
 	defaultBadgerOptions.Logger = logger
+
 	return &DB{
-		logger:               logger,
-		path:                 path,
-		flock:                flock.New(lock),
-		defaultBadgerOptions: defaultBadgerOptions,
+		logger:        logger,
+		flock:         flock.New(path + ".lock"),
+		badgerOptions: defaultBadgerOptions,
 	}
 }
 
@@ -42,7 +41,7 @@ func (b *DB) CreateVolumeMetadata(name string, action ActionCallback) error {
 		}
 	}()
 
-	db, err := badger.Open(b.defaultBadgerOptions)
+	db, err := badger.Open(b.badgerOptions)
 	if err != nil {
 		return fmt.Errorf("failed to open badger database: %v", err)
 	}
@@ -63,7 +62,7 @@ func (b *DB) CreateVolumeMetadata(name string, action ActionCallback) error {
 		return nil
 	})
 	if err != nil {
-		return fmt.Errorf("failed to open badger database: %v", err)
+		return fmt.Errorf("failed to read badger database: %v", err)
 	}
 
 	txn := db.NewTransaction(true)
@@ -99,7 +98,7 @@ func (b *DB) GetVolumeMetadata(name string) (*apis.VolumeMetadata, error) {
 		}
 	}()
 
-	db, err := badger.Open(b.defaultBadgerOptions)
+	db, err := badger.Open(b.badgerOptions)
 	if err != nil {
 		return &apis.VolumeMetadata{}, fmt.Errorf("failed to open badger database: %v", err)
 	}
@@ -113,11 +112,9 @@ func (b *DB) GetVolumeMetadata(name string) (*apis.VolumeMetadata, error) {
 }
 
 func (b *DB) GetVolumeMetadataMap() (map[string]*apis.VolumeMetadata, error) {
-	volumeMetadataMap := make(map[string]*apis.VolumeMetadata)
-
 	err := b.flock.Lock()
 	if err != nil {
-		return volumeMetadataMap, nil
+		return make(map[string]*apis.VolumeMetadata), nil
 	}
 	defer func() {
 		if err := b.flock.Unlock(); err != nil {
@@ -125,9 +122,9 @@ func (b *DB) GetVolumeMetadataMap() (map[string]*apis.VolumeMetadata, error) {
 		}
 	}()
 
-	db, err := badger.Open(b.defaultBadgerOptions)
+	db, err := badger.Open(b.badgerOptions)
 	if err != nil {
-		return volumeMetadataMap, fmt.Errorf("failed to open badger database: %v", err)
+		return make(map[string]*apis.VolumeMetadata), fmt.Errorf("failed to open badger database: %v", err)
 	}
 	defer func() {
 		if err := db.Close(); err != nil {
@@ -135,6 +132,7 @@ func (b *DB) GetVolumeMetadataMap() (map[string]*apis.VolumeMetadata, error) {
 		}
 	}()
 
+	volumeMetadataMap := make(map[string]*apis.VolumeMetadata)
 	err = db.View(func(txn *badger.Txn) error {
 		it := txn.NewIterator(badger.DefaultIteratorOptions)
 		defer it.Close()
@@ -168,7 +166,7 @@ func (b *DB) SetVolumeMetadata(name string, action ActionCallback) error {
 		}
 	}()
 
-	db, err := badger.Open(b.defaultBadgerOptions)
+	db, err := badger.Open(b.badgerOptions)
 	if err != nil {
 		return fmt.Errorf("failed to open badger database: %v", err)
 	}
@@ -215,7 +213,7 @@ func (b *DB) DeleteVolumeMetadata(name string, action ActionCallback) error {
 		}
 	}()
 
-	db, err := badger.Open(b.defaultBadgerOptions)
+	db, err := badger.Open(b.badgerOptions)
 	if err != nil {
 		return fmt.Errorf("failed to open badger database: %v", err)
 	}
