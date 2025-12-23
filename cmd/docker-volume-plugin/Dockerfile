@@ -1,8 +1,7 @@
 FROM registry.hub.docker.com/library/golang:1.24 AS builder
 WORKDIR /workspace
 COPY . /workspace
-ENV EXECUTABLE=docker-volume-plugin
-RUN make build
+RUN PLUGIN=docker-volume-plugin make build
 
 FROM alpine:3.22.0
 WORKDIR /
