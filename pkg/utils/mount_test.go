@@ -1,26 +1,20 @@
 package utils
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+)
 
 func TestIsMounted(t *testing.T) {
 	mounted, err := IsMounted("/")
-	if err != nil {
-		t.Fatalf("got error when checking if / is mounted: %v", err)
-	}
-	if !mounted {
-		t.Fatalf("/ should be a mount point")
-	}
+	assert.NoError(t, err)
+	assert.True(t, mounted)
 
 	mounted, err = IsMounted("/bin")
-	if err != nil {
-		t.Fatalf("got error when checking if /bin is mounted: %v", err)
-	}
-	if mounted {
-		t.Fatalf("/bin should not be a mount point")
-	}
+	assert.NoError(t, err)
+	assert.False(t, mounted)
 
 	_, err = IsMounted("/non-exist")
-	if err == nil {
-		t.Fatalf("expected error when checking non-existent mount point, got nil")
-	}
+	assert.Error(t, err)
 }

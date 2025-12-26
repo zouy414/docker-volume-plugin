@@ -1,8 +1,9 @@
 package apis
 
 import (
-	"reflect"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestUnmarshalVolumeSpec(t *testing.T) {
@@ -60,12 +61,8 @@ func TestUnmarshalVolumeSpec(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			spec := &VolumeSpec{}
 			err := spec.Unmarshal(tt.data)
-			if !reflect.DeepEqual(spec, tt.excepted) {
-				t.Errorf("Unmarshal expected %v, got %v", tt.excepted, spec)
-			}
-			if (err != nil) != tt.hasErr {
-				t.Errorf("Unmarshal got not excepted error: %v", err)
-			}
+			assert.True(t, (err != nil) == tt.hasErr, "Unmarshal got not excepted error: %v", err)
+			assert.Equal(t, spec, tt.excepted)
 		})
 	}
 }
