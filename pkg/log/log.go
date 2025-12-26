@@ -4,9 +4,26 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 )
 
 type LogLevel int
+
+// StringToLogLevel converts string to LogLevel, invalid strings will return InfoLevel
+func StringToLogLevel(logLevel string) LogLevel {
+	switch strings.ToLower(logLevel) {
+	case "debug":
+		return DebugLevel
+	case "info":
+		return InfoLevel
+	case "warn":
+		return WarnLevel
+	case "error":
+		return ErrorLevel
+	default:
+		return InfoLevel
+	}
+}
 
 const (
 	DebugLevel LogLevel = iota
@@ -33,7 +50,17 @@ func New(service string) *Logger {
 	}
 }
 
-// Logger ...
+// NewWithLogLevel logger
+func NewWithLogLevel(service string, logLevel LogLevel) *Logger {
+	logger := log.New(os.Stdout, "", log.Ldate|log.Ltime|log.Lshortfile)
+	return &Logger{
+		logLevel: logLevel,
+		service:  service,
+		logger:   logger,
+	}
+}
+
+// Logger struct
 type Logger struct {
 	logLevel LogLevel
 	service  string
