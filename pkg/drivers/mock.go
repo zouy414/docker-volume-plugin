@@ -33,45 +33,45 @@ type mock struct {
 	volumeMetadataMap    map[string]*apis.VolumeMetadata
 }
 
-func (m *mock) Create(name string, options map[string]string) error {
-	m.volumeMetadataMap[name] = &apis.VolumeMetadata{
+func (driver *mock) Create(name string, options map[string]string) error {
+	driver.volumeMetadataMap[name] = &apis.VolumeMetadata{
 		Mountpoint: name,
 		CreatedAt:  time.Now(),
 		Spec:       &apis.VolumeSpec{},
 		Status:     &apis.VolumeStatus{MountBy: []string{}},
 	}
-	return os.MkdirAll(path.Join(m.propagatedMountpoint, m.volumeMetadataMap[name].Mountpoint), 0755)
+	return os.MkdirAll(path.Join(driver.propagatedMountpoint, driver.volumeMetadataMap[name].Mountpoint), 0755)
 }
 
-func (m *mock) List() (map[string]*apis.VolumeMetadata, error) {
-	return m.volumeMetadataMap, nil
+func (driver *mock) List() (map[string]*apis.VolumeMetadata, error) {
+	return driver.volumeMetadataMap, nil
 }
 
-func (m *mock) Get(name string) (*apis.VolumeMetadata, error) {
-	return m.volumeMetadataMap[name], nil
+func (driver *mock) Get(name string) (*apis.VolumeMetadata, error) {
+	return driver.volumeMetadataMap[name], nil
 }
 
-func (m *mock) Remove(name string) error {
-	if m.volumeMetadataMap[name] == nil {
+func (driver *mock) Remove(name string) error {
+	if driver.volumeMetadataMap[name] == nil {
 		return fmt.Errorf("volume %s does not exist", name)
 	}
-	if len(m.volumeMetadataMap[name].Status.MountBy) != 0 {
-		return fmt.Errorf("volume %s is mounted by %s, unmount it before removing", name, m.volumeMetadataMap[name].Status.MountBy)
+	if len(driver.volumeMetadataMap[name].Status.MountBy) != 0 {
+		return fmt.Errorf("volume %s is mounted by %s, unmount it before removing", name, driver.volumeMetadataMap[name].Status.MountBy)
 	}
-	delete(m.volumeMetadataMap, name)
+	delete(driver.volumeMetadataMap, name)
 	return nil
 }
 
-func (m *mock) Path(name string) (string, error) {
-	volumeMetadata, existed := m.volumeMetadataMap[name]
+func (driver *mock) Path(name string) (string, error) {
+	volumeMetadata, existed := driver.volumeMetadataMap[name]
 	if !existed {
 		return "", fmt.Errorf("volume %s does not exist", name)
 	}
 	return volumeMetadata.Mountpoint, nil
 }
 
-func (m *mock) Mount(name string, id string) (string, error) {
-	volumeMetadata, existed := m.volumeMetadataMap[name]
+func (driver *mock) Mount(name string, id string) (string, error) {
+	volumeMetadata, existed := driver.volumeMetadataMap[name]
 	if !existed {
 		return "", fmt.Errorf("volume %s does not exist", name)
 	}
@@ -82,8 +82,8 @@ func (m *mock) Mount(name string, id string) (string, error) {
 	return volumeMetadata.Mountpoint, nil
 }
 
-func (m *mock) Unmount(name string, id string) error {
-	volumeMetadata, existed := m.volumeMetadataMap[name]
+func (driver *mock) Unmount(name string, id string) error {
+	volumeMetadata, existed := driver.volumeMetadataMap[name]
 	if !existed {
 		return fmt.Errorf("volume %s does not exist", name)
 	}
@@ -94,6 +94,6 @@ func (m *mock) Unmount(name string, id string) error {
 	return nil
 }
 
-func (n *mock) Destroy() error {
+func (driver *mock) Destroy() error {
 	return nil
 }

@@ -20,7 +20,7 @@ func init() {
 }
 
 func nfsFactory(ctx context.Context, logger *log.Logger, propagatedMountpoint string, driverOptions string) (apis.Driver, error) {
-	opts := &nfsOptions{
+	opts := &nfsDriverOptions{
 		MountOptions:       []string{"nfsvers=4", "rw", "noatime", "rsize=8192", "wsize=8192", "tcp", "timeo=14", "sync"},
 		PurgeAfterDelete:   false,
 		AllowMultipleMount: true,
@@ -59,7 +59,7 @@ func nfsFactory(ctx context.Context, logger *log.Logger, propagatedMountpoint st
 	}, nil
 }
 
-type nfsOptions struct {
+type nfsDriverOptions struct {
 	// Address of NFS server
 	Address string `json:"address"`
 	// RemotePath of NFS exported
@@ -76,30 +76,30 @@ type nfsOptions struct {
 
 type nfs struct {
 	logger       *log.Logger
-	opts         *nfsOptions
+	opts         *nfsDriverOptions
 	db           *badger.DB
 	rootPath     string
 	lock         *sync.RWMutex
 	reservedPath []string
 }
 
-func (n *nfs) Create(name string, options map[string]string) error {
-	n.lock.Lock()
-	defer n.lock.Unlock()
+func (driver *nfs) Create(name string, options map[string]string) error {
+	driver.lock.Lock()
+	defer driver.lock.Unlock()
 
-	if slices.Contains(n.reservedPath, name) {
+	if slices.Contains(driver.reservedPath, name) {
 		return fmt.Errorf("volume name %s is reserved, please choose a different name", name)
 	}
 
 	spec := apis.VolumeSpec{
-		PurgeAfterDelete:   n.opts.PurgeAfterDelete,
-		AllowMultipleMount: n.opts.AllowMultipleMount,
+		PurgeAfterDelete:   driver.opts.PurgeAfterDelete,
+		AllowMultipleMount: driver.opts.AllowMultipleMount,
 	}
 	if err := spec.Unmarshal(options); err != nil {
 		return err
 	}
 
-	return n.db.CreateVolumeMetadata(name, func(volumeMetadata *apis.VolumeMetadata) error {
+	return driver.db.CreateVolumeMetadata(name, func(volumeMetadata *apis.VolumeMetadata) error {
 		*volumeMetadata = apis.VolumeMetadata{
 			Mountpoint: path.Join(name, "_data"),
 			CreatedAt:  time.Now(),
@@ -109,35 +109,35 @@ func (n *nfs) Create(name string, options map[string]string) error {
 			},
 		}
 
-		return os.MkdirAll(path.Join(n.rootPath, volumeMetadata.Mountpoint), 0755)
+		return os.MkdirAll(path.Join(driver.rootPath, volumeMetadata.Mountpoint), 0755)
 	})
 }
 
-func (n *nfs) List() (map[string]*apis.VolumeMetadata, error) {
-	n.lock.Lock()
-	defer n.lock.Unlock()
+func (driver *nfs) List() (map[string]*apis.VolumeMetadata, error) {
+	driver.lock.Lock()
+	defer driver.lock.Unlock()
 
-	return n.db.GetVolumeMetadataMap()
+	return driver.db.GetVolumeMetadataMap()
 }
 
-func (n *nfs) Get(name string) (*apis.VolumeMetadata, error) {
-	n.lock.Lock()
-	defer n.lock.Unlock()
+func (driver *nfs) Get(name string) (*apis.VolumeMetadata, error) {
+	driver.lock.Lock()
+	defer driver.lock.Unlock()
 
-	return n.db.GetVolumeMetadata(name)
+	return driver.db.GetVolumeMetadata(name)
 }
 
-func (n *nfs) Remove(name string) error {
-	n.lock.Lock()
-	defer n.lock.Unlock()
+func (driver *nfs) Remove(name string) error {
+	driver.lock.Lock()
+	defer driver.lock.Unlock()
 
-	return n.db.DeleteVolumeMetadata(name, func(volumeMetadata *apis.VolumeMetadata) error {
+	return driver.db.DeleteVolumeMetadata(name, func(volumeMetadata *apis.VolumeMetadata) error {
 		if len(volumeMetadata.Status.MountBy) != 0 {
 			return fmt.Errorf("volume %s is mounted by %s, unmount it before removing", name, volumeMetadata.Status.MountBy)
 		}
 
 		if volumeMetadata.Spec.PurgeAfterDelete {
-			err := os.RemoveAll(path.Join(n.rootPath, name))
+			err := os.RemoveAll(path.Join(driver.rootPath, name))
 			if err != nil {
 				return fmt.Errorf("failed to remove volume data: %s", err)
 			}
@@ -146,20 +146,20 @@ func (n *nfs) Remove(name string) error {
 	})
 }
 
-func (n *nfs) Path(name string) (string, error) {
-	n.lock.Lock()
-	defer n.lock.Unlock()
+func (driver *nfs) Path(name string) (string, error) {
+	driver.lock.Lock()
+	defer driver.lock.Unlock()
 
-	volumeMetadata, err := n.db.GetVolumeMetadata(name)
+	volumeMetadata, err := driver.db.GetVolumeMetadata(name)
 
 	return volumeMetadata.Mountpoint, err
 }
 
-func (n *nfs) Mount(name string, id string) (string, error) {
-	n.lock.Lock()
-	defer n.lock.Unlock()
+func (driver *nfs) Mount(name string, id string) (string, error) {
+	driver.lock.Lock()
+	defer driver.lock.Unlock()
 
-	return path.Join(name, "_data"), n.db.SetVolumeMetadata(name, func(volumeMetadata *apis.VolumeMetadata) error {
+	return path.Join(name, "_data"), driver.db.SetVolumeMetadata(name, func(volumeMetadata *apis.VolumeMetadata) error {
 		if (!volumeMetadata.Spec.AllowMultipleMount && volumeMetadata.Status.IsMounted()) || volumeMetadata.Status.IsMountedBy(id) {
 			return fmt.Errorf("volume %s is already mounted", name)
 		}
@@ -169,11 +169,11 @@ func (n *nfs) Mount(name string, id string) (string, error) {
 	})
 }
 
-func (n *nfs) Unmount(name string, id string) error {
-	n.lock.Lock()
-	defer n.lock.Unlock()
+func (driver *nfs) Unmount(name string, id string) error {
+	driver.lock.Lock()
+	defer driver.lock.Unlock()
 
-	return n.db.SetVolumeMetadata(name, func(volumeMetadata *apis.VolumeMetadata) error {
+	return driver.db.SetVolumeMetadata(name, func(volumeMetadata *apis.VolumeMetadata) error {
 		if !volumeMetadata.Status.IsMountedBy(id) {
 			return fmt.Errorf("volume %s is not mounted by %s", name, id)
 		}
@@ -183,16 +183,16 @@ func (n *nfs) Unmount(name string, id string) error {
 	})
 }
 
-func (n *nfs) Destroy() error {
-	err := n.db.Close()
+func (driver *nfs) Destroy() error {
+	err := driver.db.Close()
 	if err != nil {
 		return fmt.Errorf("failed to close database: %s", err)
 	}
 
-	if !n.opts.Mock {
-		err = utils.Umount(n.rootPath)
+	if !driver.opts.Mock {
+		err = utils.Umount(driver.rootPath)
 		if err != nil {
-			return fmt.Errorf("failed to unmount NFS mount root path %s: %s", n.rootPath, err)
+			return fmt.Errorf("failed to unmount NFS mount root path %s: %s", driver.rootPath, err)
 		}
 	}
 
