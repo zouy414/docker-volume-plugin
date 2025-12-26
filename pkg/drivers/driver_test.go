@@ -19,14 +19,15 @@ func TestNew(t *testing.T) {
 }
 
 func TestDrivers(t *testing.T) {
-	propagatedMountpoint := os.TempDir() + "/test-mountpoint-%s"
+	testMountpointFormatString := os.TempDir() + "/test-mountpoint-%s"
+
 	cases := []struct {
 		driver        string
 		driverOptions string
 	}{
 		{
 			driver:        "nfs",
-			driverOptions: `{"address": "nfs-server.mock", "remotePath": "/mock", "purgeAfterDelete": true, "allowMultipleMount": true}`,
+			driverOptions: `{"address": "nfs-server.example.com", "remotePath": "/mock", "purgeAfterDelete": true, "allowMultipleMount": true, "mock": true}`,
 		},
 		{
 			driver: "mock",
@@ -34,13 +35,13 @@ func TestDrivers(t *testing.T) {
 	}
 	defer func() {
 		for _, c := range cases {
-			_ = os.RemoveAll(fmt.Sprintf(propagatedMountpoint, c.driver))
+			_ = os.RemoveAll(fmt.Sprintf(testMountpointFormatString, c.driver))
 		}
 	}()
 
 	for _, c := range cases {
 		t.Run(c.driver, func(t *testing.T) {
-			driver, err := New(context.Background(), log.New(c.driver), c.driver, fmt.Sprintf(propagatedMountpoint, c.driver), c.driverOptions)
+			driver, err := New(context.Background(), log.New(c.driver), c.driver, fmt.Sprintf(testMountpointFormatString, c.driver), c.driverOptions)
 			if err != nil {
 				t.Fatalf("expected no error, got %v", err)
 			}

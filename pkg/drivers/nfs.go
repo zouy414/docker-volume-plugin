@@ -30,13 +30,15 @@ func nfsFactory(ctx context.Context, logger *log.Logger, propagatedMountpoint st
 		return nil, fmt.Errorf("failed to parse driver options: %s", err)
 	}
 
-	// Mount NFS share to a local mount point
+	// Create local mount point directory if not exists
 	err = os.MkdirAll(propagatedMountpoint, 0755)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create NFS mount point directory: %s", err)
 	}
-	if opts.Address == "nfs-server.mock" {
-		logger.Warning("using mock NFS server, no actual NFS mount will be performed")
+
+	// Mount NFS share to a local mount point
+	if opts.Mock {
+		logger.Warning("Mock mode enabled, no actual NFS mount will be performed")
 	} else {
 		err = utils.MountNFS(opts.Address, opts.RemotePath, propagatedMountpoint, opts.MountOptions)
 		if err != nil {
@@ -68,6 +70,8 @@ type nfsOptions struct {
 	PurgeAfterDelete bool `json:"purgeAfterDelete,omitempty"`
 	// AllowMultipleMount indicates whether to allow multiple containers to mount the same volume
 	AllowMultipleMount bool `json:"allowMultipleMount,omitempty"`
+	// Mock indicates whether to run in mock mode (no actual NFS mount)
+	Mock bool `json:"mock,omitempty"`
 }
 
 type nfs struct {
@@ -185,7 +189,7 @@ func (n *nfs) Destroy() error {
 		return fmt.Errorf("failed to close database: %s", err)
 	}
 
-	if n.opts.Address != "nfs-server.mock" {
+	if !n.opts.Mock {
 		err = utils.Umount(n.rootPath)
 		if err != nil {
 			return fmt.Errorf("failed to unmount NFS mount root path %s: %s", n.rootPath, err)
