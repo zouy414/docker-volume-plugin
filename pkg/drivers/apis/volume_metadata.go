@@ -3,10 +3,11 @@ package apis
 import (
 	"encoding/json"
 	"fmt"
-	"slices"
+	"path"
 	"strconv"
 	"time"
 
+	"github.com/docker/go-plugins-helpers/volume"
 	"github.com/go-playground/validator/v10"
 )
 
@@ -46,9 +47,17 @@ func (vm *VolumeMetadata) Unmarshal(data []byte) (err error) {
 	return nil
 }
 
+func (vm *VolumeMetadata) ToVolume(name string, mountpointBase string) *volume.Volume {
+	return &volume.Volume{
+		Name:       name,
+		Mountpoint: path.Join(mountpointBase, vm.Mountpoint),
+		CreatedAt:  vm.CreatedAt.Local().Format(time.RFC3339),
+		Status:     map[string]interface{}{},
+	}
+}
+
 type VolumeSpec struct {
-	PurgeAfterDelete   bool `json:"purgeAfterDelete,omitempty"`
-	AllowMultipleMount bool `json:"allowMultipleMount,omitempty"`
+	PurgeAfterDelete bool `json:"purgeAfterDelete,omitempty"`
 }
 
 func (spec *VolumeSpec) Unmarshal(data map[string]string) (err error) {
@@ -59,11 +68,6 @@ func (spec *VolumeSpec) Unmarshal(data map[string]string) (err error) {
 			if err != nil {
 				return fmt.Errorf("invalid value for purgeAfterDelete: %v", err)
 			}
-		case "allowMultipleMount":
-			spec.AllowMultipleMount, err = strconv.ParseBool(value)
-			if err != nil {
-				return fmt.Errorf("invalid value for allowMultipleMount: %v", err)
-			}
 		default:
 			return fmt.Errorf("unknown option %s with value %s", key, value)
 		}
@@ -72,24 +76,4 @@ func (spec *VolumeSpec) Unmarshal(data map[string]string) (err error) {
 	return nil
 }
 
-type VolumeStatus struct {
-	MountBy []string `json:"mountBy,omitempty"`
-}
-
-func (status *VolumeStatus) IsMounted() bool {
-	return len(status.MountBy) > 0
-}
-
-func (status *VolumeStatus) IsMountedBy(id string) bool {
-	return slices.Contains(status.MountBy, id)
-}
-
-func (status *VolumeStatus) AddMount(id string) {
-	if !slices.Contains(status.MountBy, id) {
-		status.MountBy = append(status.MountBy, id)
-	}
-}
-
-func (status *VolumeStatus) RemoveMount(id string) {
-	status.MountBy = slices.DeleteFunc(status.MountBy, func(mountID string) bool { return mountID == id })
-}
+type VolumeStatus struct{}

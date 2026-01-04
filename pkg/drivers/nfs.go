@@ -21,10 +21,9 @@ func init() {
 
 func nfsFactory(ctx context.Context, logger *log.Logger, propagatedMountpoint string, driverOptions string) (apis.Driver, error) {
 	opts := &nfsDriverOptions{
-		MountOptions:       []string{"nfsvers=4", "rw", "noatime", "rsize=8192", "wsize=8192", "tcp", "timeo=14", "sync"},
-		PurgeAfterDelete:   false,
-		AllowMultipleMount: true,
-		Mock:               false,
+		MountOptions:     []string{"nfsvers=4", "rw", "noatime", "rsize=8192", "wsize=8192", "tcp", "timeo=14", "sync"},
+		PurgeAfterDelete: false,
+		Mock:             false,
 	}
 	err := json.Unmarshal([]byte(driverOptions), opts)
 	if err != nil {
@@ -73,9 +72,6 @@ type nfsDriverOptions struct {
 	// PurgeAfterDelete indicates whether to purge the volume data after deletion
 	PurgeAfterDelete bool `json:"purgeAfterDelete,omitempty"`
 
-	// AllowMultipleMount indicates whether to allow multiple containers to mount the same volume
-	AllowMultipleMount bool `json:"allowMultipleMount,omitempty"`
-
 	// Mock indicates whether to run in mock mode (no actual NFS mount)
 	Mock bool `json:"mock,omitempty"`
 }
@@ -98,8 +94,7 @@ func (driver *nfs) Create(name string, options map[string]string) error {
 	}
 
 	spec := apis.VolumeSpec{
-		PurgeAfterDelete:   driver.opts.PurgeAfterDelete,
-		AllowMultipleMount: driver.opts.AllowMultipleMount,
+		PurgeAfterDelete: driver.opts.PurgeAfterDelete,
 	}
 	if err := spec.Unmarshal(options); err != nil {
 		return err
@@ -110,9 +105,7 @@ func (driver *nfs) Create(name string, options map[string]string) error {
 			Mountpoint: path.Join(name, "_data"),
 			CreatedAt:  time.Now(),
 			Spec:       &spec,
-			Status: &apis.VolumeStatus{
-				MountBy: []string{},
-			},
+			Status:     &apis.VolumeStatus{},
 		}
 
 		return os.MkdirAll(path.Join(driver.rootPath, volumeMetadata.Mountpoint), 0755)
@@ -160,11 +153,7 @@ func (driver *nfs) Mount(name string, id string) (string, error) {
 	defer driver.lock.Unlock()
 
 	return path.Join(name, "_data"), driver.db.SetVolumeMetadata(name, func(volumeMetadata *apis.VolumeMetadata) error {
-		if (!volumeMetadata.Spec.AllowMultipleMount && volumeMetadata.Status.IsMounted()) || volumeMetadata.Status.IsMountedBy(id) {
-			return fmt.Errorf("volume %s is already mounted", name)
-		}
-
-		volumeMetadata.Status.AddMount(id)
+		// Do nothing
 		return nil
 	})
 }
@@ -174,12 +163,7 @@ func (driver *nfs) Unmount(name string, id string) error {
 	defer driver.lock.Unlock()
 
 	return driver.db.SetVolumeMetadata(name, func(volumeMetadata *apis.VolumeMetadata) error {
-		if !volumeMetadata.Status.IsMountedBy(id) {
-			driver.logger.Warningf("volume %s is not mounted by %s", name, id)
-			return nil
-		}
-
-		volumeMetadata.Status.RemoveMount(id)
+		// Do nothing
 		return nil
 	})
 }

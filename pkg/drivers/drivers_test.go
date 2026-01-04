@@ -75,19 +75,11 @@ func TestDrivers(t *testing.T) {
 			_, err = driver.Mount("test", "4103b9f9-189c-4a12-b1fb-5511ddc18297")
 			assert.NoError(t, err)
 
-			// Test Mount already mounted volume
-			_, err = driver.Mount("test", "4103b9f9-189c-4a12-b1fb-5511ddc18297")
-			assert.Error(t, err)
-
 			// Test Mount non-exist volume
 			_, err = driver.Mount("non-exist", "4103b9f9-189c-4a12-b1fb-5511ddc18297")
 			assert.Error(t, err)
 
 			// Test Unmount
-			err = driver.Unmount("test", "4103b9f9-189c-4a12-b1fb-5511ddc18297")
-			assert.NoError(t, err)
-
-			// Test Unmount non-mounted volume
 			err = driver.Unmount("test", "4103b9f9-189c-4a12-b1fb-5511ddc18297")
 			assert.NoError(t, err)
 
@@ -99,7 +91,7 @@ func TestDrivers(t *testing.T) {
 			err = driver.Remove("test")
 			assert.NoError(t, err)
 
-			// Test Remove non-existent volume
+			// Test Remove non-exist volume
 			err = driver.Remove("non-exist")
 			assert.Error(t, err)
 

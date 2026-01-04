@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"os"
 	"path"
-	"slices"
 	"time"
 )
 
@@ -38,7 +37,7 @@ func (driver *mock) Create(name string, options map[string]string) error {
 		Mountpoint: name,
 		CreatedAt:  time.Now(),
 		Spec:       &apis.VolumeSpec{},
-		Status:     &apis.VolumeStatus{MountBy: []string{}},
+		Status:     &apis.VolumeStatus{},
 	}
 	return os.MkdirAll(path.Join(driver.propagatedMountpoint, driver.volumeMetadataMap[name].Mountpoint), 0755)
 }
@@ -72,23 +71,14 @@ func (driver *mock) Mount(name string, id string) (string, error) {
 	if !existed {
 		return "", fmt.Errorf("volume %s does not exist", name)
 	}
-	if slices.Contains(volumeMetadata.Status.MountBy, id) {
-		return "", fmt.Errorf("volume %s is already mounted by %s", name, id)
-	}
-	volumeMetadata.Status.MountBy = append(volumeMetadata.Status.MountBy, id)
 	return volumeMetadata.Mountpoint, nil
 }
 
 func (driver *mock) Unmount(name string, id string) error {
-	volumeMetadata, existed := driver.volumeMetadataMap[name]
+	_, existed := driver.volumeMetadataMap[name]
 	if !existed {
 		return fmt.Errorf("volume %s does not exist", name)
 	}
-	if !slices.Contains(volumeMetadata.Status.MountBy, id) {
-		driver.logger.Warningf("volume %s is not mounted by %s", name, id)
-		return nil
-	}
-	volumeMetadata.Status.MountBy = slices.DeleteFunc(volumeMetadata.Status.MountBy, func(mountID string) bool { return mountID == id })
 	return nil
 }
 

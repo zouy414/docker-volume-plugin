@@ -7,7 +7,6 @@ import (
 	"docker-volume-plugin/pkg/log"
 	"path"
 	"strings"
-	"time"
 
 	"github.com/docker/go-plugins-helpers/volume"
 )
@@ -46,17 +45,6 @@ func (d *VolumePlugin) Create(req *volume.CreateRequest) error {
 	return err
 }
 
-func (d *VolumePlugin) convertVolumeMetadataToVolume(name string, metadata *apis.VolumeMetadata) *volume.Volume {
-	return &volume.Volume{
-		Name:       name,
-		Mountpoint: path.Join(d.mountpointBase, metadata.Mountpoint),
-		CreatedAt:  metadata.CreatedAt.Local().Format(time.RFC3339),
-		Status: map[string]interface{}{
-			"mountBy": metadata.Status.MountBy,
-		},
-	}
-}
-
 func (d *VolumePlugin) List() (*volume.ListResponse, error) {
 	d.logger.Debug("listing all volumes")
 
@@ -68,7 +56,7 @@ func (d *VolumePlugin) List() (*volume.ListResponse, error) {
 		return listResponse, err
 	}
 	for name, metadata := range volumeMetadataMap {
-		listResponse.Volumes = append(listResponse.Volumes, d.convertVolumeMetadataToVolume(name, metadata))
+		listResponse.Volumes = append(listResponse.Volumes, metadata.ToVolume(name, d.mountpointBase))
 	}
 
 	d.logger.Debugf("listed volumes: %v", listResponse.Volumes)
@@ -84,7 +72,7 @@ func (d *VolumePlugin) Get(req *volume.GetRequest) (*volume.GetResponse, error) 
 	if err != nil {
 		return getResponse, err
 	}
-	getResponse.Volume = d.convertVolumeMetadataToVolume(req.Name, metadata)
+	getResponse.Volume = metadata.ToVolume(req.Name, d.mountpointBase)
 
 	d.logger.Debugf("got volume %s: %v", req.Name, getResponse.Volume)
 

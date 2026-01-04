@@ -22,27 +22,16 @@ func TestUnmarshalVolumeSpec(t *testing.T) {
 		{
 			name: "valid options",
 			data: map[string]string{
-				"purgeAfterDelete":   "true",
-				"allowMultipleMount": "false",
+				"purgeAfterDelete": "true",
 			},
 			excepted: &VolumeSpec{
-				PurgeAfterDelete:   true,
-				AllowMultipleMount: false,
-			},
+				PurgeAfterDelete: true},
 			hasErr: false,
 		},
 		{
 			name: "invalid value for purgeAfterDelete",
 			data: map[string]string{
 				"purgeAfterDelete": "yes",
-			},
-			excepted: &VolumeSpec{},
-			hasErr:   true,
-		},
-		{
-			name: "invalid value for allowMultipleMount",
-			data: map[string]string{
-				"allowMultipleMount": "yes",
 			},
 			excepted: &VolumeSpec{},
 			hasErr:   true,
