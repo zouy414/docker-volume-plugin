@@ -30,11 +30,11 @@ func TestDrivers(t *testing.T) {
 		driverOptions string
 	}{
 		{
-			driver:        "nfs",
-			driverOptions: `{"address": "nfs-server.example.com", "remotePath": "/mock", "mock": true}`,
+			driver: "mock",
 		},
 		{
-			driver: "mock",
+			driver:        "nfs",
+			driverOptions: `{"address": "nfs-server.example.com", "remotePath": "/mock", "mock": true}`,
 		},
 	}
 	defer func() {
@@ -83,23 +83,19 @@ func TestDrivers(t *testing.T) {
 			_, err = driver.Mount("non-exist", "4103b9f9-189c-4a12-b1fb-5511ddc18297")
 			assert.Error(t, err)
 
-			// Test Remove mounted volume
-			err = driver.Remove("test")
-			assert.Error(t, err)
-
 			// Test Unmount
 			err = driver.Unmount("test", "4103b9f9-189c-4a12-b1fb-5511ddc18297")
 			assert.NoError(t, err)
 
 			// Test Unmount non-mounted volume
 			err = driver.Unmount("test", "4103b9f9-189c-4a12-b1fb-5511ddc18297")
-			assert.Error(t, err)
+			assert.NoError(t, err)
 
 			// Test Unmount non-exist volume
-			_, err = driver.Mount("non-exist", "4103b9f9-189c-4a12-b1fb-5511ddc18297")
+			err = driver.Unmount("non-exist", "4103b9f9-189c-4a12-b1fb-5511ddc18297")
 			assert.Error(t, err)
 
-			// Test Remove unmounted volume
+			// Test Remove volume
 			err = driver.Remove("test")
 			assert.NoError(t, err)
 

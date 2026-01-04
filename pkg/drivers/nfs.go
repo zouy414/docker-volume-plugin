@@ -24,6 +24,7 @@ func nfsFactory(ctx context.Context, logger *log.Logger, propagatedMountpoint st
 		MountOptions:       []string{"nfsvers=4", "rw", "noatime", "rsize=8192", "wsize=8192", "tcp", "timeo=14", "sync"},
 		PurgeAfterDelete:   false,
 		AllowMultipleMount: true,
+		Mock:               false,
 	}
 	err := json.Unmarshal([]byte(driverOptions), opts)
 	if err != nil {
@@ -62,14 +63,19 @@ func nfsFactory(ctx context.Context, logger *log.Logger, propagatedMountpoint st
 type nfsDriverOptions struct {
 	// Address of NFS server
 	Address string `json:"address"`
+
 	// RemotePath of NFS exported
 	RemotePath string `json:"remotePath"`
+
 	// MountOptions for NFS
 	MountOptions []string `json:"mountOptions,omitempty"`
+
 	// PurgeAfterDelete indicates whether to purge the volume data after deletion
 	PurgeAfterDelete bool `json:"purgeAfterDelete,omitempty"`
+
 	// AllowMultipleMount indicates whether to allow multiple containers to mount the same volume
 	AllowMultipleMount bool `json:"allowMultipleMount,omitempty"`
+
 	// Mock indicates whether to run in mock mode (no actual NFS mount)
 	Mock bool `json:"mock,omitempty"`
 }
@@ -132,17 +138,11 @@ func (driver *nfs) Remove(name string) error {
 	defer driver.lock.Unlock()
 
 	return driver.db.DeleteVolumeMetadata(name, func(volumeMetadata *apis.VolumeMetadata) error {
-		if len(volumeMetadata.Status.MountBy) != 0 {
-			return fmt.Errorf("volume %s is mounted by %s, unmount it before removing", name, volumeMetadata.Status.MountBy)
+		if !volumeMetadata.Spec.PurgeAfterDelete {
+			return nil
 		}
 
-		if volumeMetadata.Spec.PurgeAfterDelete {
-			err := os.RemoveAll(path.Join(driver.rootPath, name))
-			if err != nil {
-				return fmt.Errorf("failed to remove volume data: %s", err)
-			}
-		}
-		return nil
+		return os.RemoveAll(path.Join(driver.rootPath, name))
 	})
 }
 
@@ -175,7 +175,8 @@ func (driver *nfs) Unmount(name string, id string) error {
 
 	return driver.db.SetVolumeMetadata(name, func(volumeMetadata *apis.VolumeMetadata) error {
 		if !volumeMetadata.Status.IsMountedBy(id) {
-			return fmt.Errorf("volume %s is not mounted by %s", name, id)
+			driver.logger.Warningf("volume %s is not mounted by %s", name, id)
+			return nil
 		}
 
 		volumeMetadata.Status.RemoveMount(id)

@@ -55,9 +55,6 @@ func (driver *mock) Remove(name string) error {
 	if driver.volumeMetadataMap[name] == nil {
 		return fmt.Errorf("volume %s does not exist", name)
 	}
-	if len(driver.volumeMetadataMap[name].Status.MountBy) != 0 {
-		return fmt.Errorf("volume %s is mounted by %s, unmount it before removing", name, driver.volumeMetadataMap[name].Status.MountBy)
-	}
 	delete(driver.volumeMetadataMap, name)
 	return nil
 }
@@ -88,7 +85,8 @@ func (driver *mock) Unmount(name string, id string) error {
 		return fmt.Errorf("volume %s does not exist", name)
 	}
 	if !slices.Contains(volumeMetadata.Status.MountBy, id) {
-		return fmt.Errorf("volume %s is not mounted by %s", name, id)
+		driver.logger.Warningf("volume %s is not mounted by %s", name, id)
+		return nil
 	}
 	volumeMetadata.Status.MountBy = slices.DeleteFunc(volumeMetadata.Status.MountBy, func(mountID string) bool { return mountID == id })
 	return nil
