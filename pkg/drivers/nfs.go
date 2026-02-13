@@ -3,7 +3,7 @@ package drivers
 import (
 	"context"
 	"docker-volume-plugin/pkg/drivers/apis"
-	"docker-volume-plugin/pkg/drivers/store/badger"
+	"docker-volume-plugin/pkg/drivers/storage/badger"
 	"docker-volume-plugin/pkg/log"
 	"docker-volume-plugin/pkg/utils"
 	"encoding/json"
