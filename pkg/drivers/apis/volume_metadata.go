@@ -20,6 +20,7 @@ type VolumeMetadata struct {
 	Status     *VolumeStatus `json:"status" validate:"required"`
 }
 
+// Marshal validates the VolumeMetadata struct and marshals it into JSON format.
 func (vm *VolumeMetadata) Marshal() (data []byte, err error) {
 	err = globalValidator.Struct(vm)
 	if err != nil {
@@ -33,6 +34,7 @@ func (vm *VolumeMetadata) Marshal() (data []byte, err error) {
 	return data, err
 }
 
+// Unmarshal unmarshals the JSON data into the VolumeMetadata struct and validates it.
 func (vm *VolumeMetadata) Unmarshal(data []byte) (err error) {
 	err = json.Unmarshal(data, vm)
 	if err != nil {
@@ -47,6 +49,7 @@ func (vm *VolumeMetadata) Unmarshal(data []byte) (err error) {
 	return nil
 }
 
+// ToVolume converts the VolumeMetadata struct to a volume.Volume struct, using the provided name and mountpointBase.
 func (vm *VolumeMetadata) ToVolume(name string, mountpointBase string) *volume.Volume {
 	return &volume.Volume{
 		Name:       name,
@@ -60,6 +63,7 @@ type VolumeSpec struct {
 	PurgeAfterDelete bool `json:"purgeAfterDelete,omitempty"`
 }
 
+// Unmarshal takes a map of string key-value pairs and populates the VolumeSpec struct based on the provided data. It returns an error if any of the values are invalid or if there are unknown options.
 func (spec *VolumeSpec) Unmarshal(data map[string]string) (err error) {
 	for key, value := range data {
 		switch key {

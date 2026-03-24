@@ -36,7 +36,18 @@ func MountNFS(address string, remotePath string, localPath string, mountOptions 
 	return nil
 }
 
-// UmountNFS unmounts an NFS share from a local path.
+// MountCIFS mounts a CIFS share to a local path.
+func MountCIFS(address string, remotePath string, localPath string, username string, password string, mountOptions []string) error {
+
+	cmd := exec.Command("mount", "-t", "cifs", "-o", fmt.Sprintf("username=%s,password=%s,%s", username, password, strings.Join(mountOptions, ",")), fmt.Sprintf("//%s/%s", address, remotePath), localPath)
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("mount failed: %v, output: %s", err, string(output))
+	}
+	return nil
+}
+
+// Umount a volume from a local path.
 func Umount(localPath string) error {
 	cmd := exec.Command("umount", localPath)
 	output, err := cmd.CombinedOutput()
@@ -46,7 +57,7 @@ func Umount(localPath string) error {
 	return nil
 }
 
-// isMounted check if a local path is mount point.
+// IsMounted check if a local path is mount point.
 func IsMounted(path string) (bool, error) {
 	return mountinfo.Mounted(path)
 }

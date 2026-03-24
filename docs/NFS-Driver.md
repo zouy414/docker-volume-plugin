@@ -5,6 +5,15 @@ and provide a mountpoint locally.
 
 **NOTE**: This driver requires `flock` feature, so it only supports NFSv4.
 
+## Example Driver Options
+
+```json
+{
+    "address":"nfs-server.example.com",
+    "remotePath":"/exported/path"
+}
+```
+
 ## Driver Options
 
 |Name|Type|Description|Default|Optional|

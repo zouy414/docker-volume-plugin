@@ -12,6 +12,7 @@ import (
 	"github.com/docker/go-plugins-helpers/volume"
 )
 
+// VolumePlugin implements the Docker volume plugin interface and delegates operations to the underlying driver.
 type VolumePlugin struct {
 	driverInstance apis.Driver
 	logger         *log.Logger
@@ -19,6 +20,7 @@ type VolumePlugin struct {
 	volume.Driver
 }
 
+// NewVolumePlugin creates a new VolumePlugin instance with the specified driver and options.
 func NewVolumePlugin(ctx context.Context, logger *log.Logger, driver string, driverOptions string) (*VolumePlugin, error) {
 	driverInstance, err := drivers.New(ctx, logger.WithService(driver), driver, volume.DefaultDockerRootDirectory, driverOptions)
 	if err != nil {

@@ -2,6 +2,7 @@ package badger
 
 import (
 	"fmt"
+	"slices"
 	"strings"
 
 	"github.com/zouy414/docker-volume-plugin/pkg/drivers/apis"
@@ -14,23 +15,32 @@ import (
 type ActionCallback func(volumeMetadata *apis.VolumeMetadata) error
 
 type DB struct {
+	path          string
 	logger        *log.Logger
 	flock         *flock.Flock
 	badgerOptions badger.Options
 }
 
+// New creates a new instance of the DB struct with the provided logger and path.
+// It initializes the badger options and sets up a file lock to ensure that only one instance of the database can be accessed at a time.
 func New(logger *log.Logger, path string) *DB {
 	defaultBadgerOptions := badger.DefaultOptions(path)
 	defaultBadgerOptions.Logger = logger
 
 	return &DB{
+		path:          path,
 		logger:        logger,
 		flock:         flock.New(path + ".lock"),
 		badgerOptions: defaultBadgerOptions,
 	}
 }
 
+// CreateVolumeMetadata creates a new volume metadata entry in the database with the specified name and action callback.
 func (b *DB) CreateVolumeMetadata(name string, action ActionCallback) error {
+	if slices.Contains([]string{b.path, b.path + ".lock"}, name) {
+		return fmt.Errorf("volume name %s is reserved, please choose a different name", name)
+	}
+
 	err := b.flock.Lock()
 	if err != nil {
 		return fmt.Errorf("failed to get flock: %v", err)
@@ -87,6 +97,7 @@ func (b *DB) CreateVolumeMetadata(name string, action ActionCallback) error {
 	return txn.Commit()
 }
 
+// GetVolumeMetadata retrieves the volume metadata for the specified volume name from the database.
 func (b *DB) GetVolumeMetadata(name string) (*apis.VolumeMetadata, error) {
 	err := b.flock.Lock()
 	if err != nil {
@@ -111,6 +122,7 @@ func (b *DB) GetVolumeMetadata(name string) (*apis.VolumeMetadata, error) {
 	return getVolumeMetadata(db, name)
 }
 
+// GetVolumeMetadataMap retrieves a map of all volume metadata entries in the database, where the keys are the volume names and the values are the corresponding volume metadata.
 func (b *DB) GetVolumeMetadataMap() (map[string]*apis.VolumeMetadata, error) {
 	err := b.flock.Lock()
 	if err != nil {
@@ -155,6 +167,7 @@ func (b *DB) GetVolumeMetadataMap() (map[string]*apis.VolumeMetadata, error) {
 	return volumeMetadataMap, err
 }
 
+// SetVolumeMetadata updates the volume metadata for the specified volume name in the database using the provided action callback to modify the existing metadata.
 func (b *DB) SetVolumeMetadata(name string, action ActionCallback) error {
 	err := b.flock.Lock()
 	if err != nil {
@@ -202,6 +215,7 @@ func (b *DB) SetVolumeMetadata(name string, action ActionCallback) error {
 	return txn.Commit()
 }
 
+// DeleteVolumeMetadata deletes the volume metadata for the specified volume name from the database using the provided action callback to perform any necessary cleanup before deletion.
 func (b *DB) DeleteVolumeMetadata(name string, action ActionCallback) error {
 	err := b.flock.Lock()
 	if err != nil {
@@ -244,6 +258,7 @@ func (b *DB) DeleteVolumeMetadata(name string, action ActionCallback) error {
 	return txn.Commit()
 }
 
+// Close releases any resources held by the DB instance, such as the file lock. It should be called when the DB instance is no longer needed to ensure proper cleanup.
 func (b *DB) Close() error {
 	return b.flock.Close()
 }

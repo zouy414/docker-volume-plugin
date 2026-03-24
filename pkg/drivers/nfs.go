@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"os"
 	"path"
-	"slices"
 	"sync"
 	"time"
 
@@ -18,6 +17,31 @@ import (
 
 func init() {
 	registerFactory("nfs", nfsFactory)
+}
+
+type nfs struct {
+	logger   *log.Logger
+	opts     *nfsDriverOptions
+	db       *badger.DB
+	rootPath string
+	lock     *sync.RWMutex
+}
+
+type nfsDriverOptions struct {
+	// Address of NFS server
+	Address string `json:"address"`
+
+	// RemotePath of NFS exported
+	RemotePath string `json:"remotePath"`
+
+	// MountOptions for NFS
+	MountOptions []string `json:"mountOptions,omitempty"`
+
+	// PurgeAfterDelete indicates whether to purge the volume data after deletion
+	PurgeAfterDelete bool `json:"purgeAfterDelete,omitempty"`
+
+	// Mock indicates whether to run in mock mode (no actual NFS mount)
+	Mock bool `json:"mock,omitempty"`
 }
 
 func nfsFactory(ctx context.Context, logger *log.Logger, propagatedMountpoint string, driverOptions string) (apis.Driver, error) {
@@ -48,51 +72,17 @@ func nfsFactory(ctx context.Context, logger *log.Logger, propagatedMountpoint st
 	}
 
 	return &nfs{
-		logger: logger,
-		opts:   opts,
-		db: badger.New(
-			logger.WithService("badger").WithLogLevel(log.WarnLevel),
-			path.Join(propagatedMountpoint, "metadata.db"),
-		),
-		rootPath:     propagatedMountpoint,
-		lock:         &sync.RWMutex{},
-		reservedPath: []string{"metadata.db", "metadata.db.lock"},
+		logger:   logger,
+		opts:     opts,
+		db:       badger.New(logger.WithService("badger").WithLogLevel(log.WarnLevel), path.Join(propagatedMountpoint, "metadata.db")),
+		rootPath: propagatedMountpoint,
+		lock:     &sync.RWMutex{},
 	}, nil
-}
-
-type nfsDriverOptions struct {
-	// Address of NFS server
-	Address string `json:"address"`
-
-	// RemotePath of NFS exported
-	RemotePath string `json:"remotePath"`
-
-	// MountOptions for NFS
-	MountOptions []string `json:"mountOptions,omitempty"`
-
-	// PurgeAfterDelete indicates whether to purge the volume data after deletion
-	PurgeAfterDelete bool `json:"purgeAfterDelete,omitempty"`
-
-	// Mock indicates whether to run in mock mode (no actual NFS mount)
-	Mock bool `json:"mock,omitempty"`
-}
-
-type nfs struct {
-	logger       *log.Logger
-	opts         *nfsDriverOptions
-	db           *badger.DB
-	rootPath     string
-	lock         *sync.RWMutex
-	reservedPath []string
 }
 
 func (driver *nfs) Create(name string, options map[string]string) error {
 	driver.lock.Lock()
 	defer driver.lock.Unlock()
-
-	if slices.Contains(driver.reservedPath, name) {
-		return fmt.Errorf("volume name %s is reserved, please choose a different name", name)
-	}
 
 	spec := apis.VolumeSpec{
 		PurgeAfterDelete: driver.opts.PurgeAfterDelete,
