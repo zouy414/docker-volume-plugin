@@ -2,9 +2,10 @@ package drivers
 
 import (
 	"context"
-	"docker-volume-plugin/pkg/drivers/apis"
-	"docker-volume-plugin/pkg/log"
 	"fmt"
+
+	"github.com/zouy414/docker-volume-plugin/pkg/drivers/apis"
+	"github.com/zouy414/docker-volume-plugin/pkg/log"
 )
 
 type driverFactory func(ctx context.Context, logger *log.Logger, propagatedMountpoint string, driverOptions string) (apis.Driver, error)

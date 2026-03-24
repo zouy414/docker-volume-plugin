@@ -2,10 +2,11 @@ package main
 
 import (
 	"context"
-	"docker-volume-plugin/pkg/adapters"
-	"docker-volume-plugin/pkg/log"
 	"flag"
 	"os"
+
+	"github.com/zouy414/docker-volume-plugin/pkg/adapters"
+	"github.com/zouy414/docker-volume-plugin/pkg/log"
 
 	"github.com/docker/go-connections/sockets"
 	"github.com/docker/go-plugins-helpers/volume"

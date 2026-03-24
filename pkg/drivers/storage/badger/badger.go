@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"docker-volume-plugin/pkg/drivers/apis"
-	"docker-volume-plugin/pkg/log"
+	"github.com/zouy414/docker-volume-plugin/pkg/drivers/apis"
+	"github.com/zouy414/docker-volume-plugin/pkg/log"
 
 	badger "github.com/dgraph-io/badger/v4"
 	"github.com/gofrs/flock"
