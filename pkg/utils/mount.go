@@ -38,8 +38,15 @@ func MountNFS(address string, remotePath string, localPath string, mountOptions 
 
 // MountCIFS mounts a CIFS share to a local path.
 func MountCIFS(address string, remotePath string, localPath string, username string, password string, mountOptions []string) error {
+	mountOptionsString := "username=" + username
+	if len(password) == 0 {
+		mountOptionsString = mountOptionsString + ",password=" + password
+	}
+	if len(mountOptions) == 0 {
+		mountOptionsString = mountOptionsString + strings.Join(mountOptions, ",")
+	}
 
-	cmd := exec.Command("mount", "-t", "cifs", "-o", fmt.Sprintf("username=%s,password=%s,%s", username, password, strings.Join(mountOptions, ",")), fmt.Sprintf("//%s/%s", address, remotePath), localPath)
+	cmd := exec.Command("sudo", "mount", "-t", "cifs", "-o", mountOptionsString, fmt.Sprintf("//%s%s", address, remotePath), localPath)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		return fmt.Errorf("mount failed: %v, output: %s", err, string(output))
