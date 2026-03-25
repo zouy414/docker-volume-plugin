@@ -14,23 +14,23 @@ import (
 
 // VolumePlugin implements the Docker volume plugin interface and delegates operations to the underlying driver.
 type VolumePlugin struct {
-	driverInstance apis.Driver
-	logger         *log.Logger
-	mountpointBase string
+	driverInstance  apis.Driver
+	logger          *log.Logger
+	propagatedMount string
 	volume.Driver
 }
 
 // NewVolumePlugin creates a new VolumePlugin instance with the specified driver and options.
-func NewVolumePlugin(ctx context.Context, logger *log.Logger, driver string, driverOptions string) (*VolumePlugin, error) {
-	driverInstance, err := drivers.New(ctx, logger.WithService(driver), driver, volume.DefaultDockerRootDirectory, driverOptions)
+func NewVolumePlugin(ctx context.Context, logger *log.Logger, driver string, propagatedMount string, driverOptions string) (*VolumePlugin, error) {
+	driverInstance, err := drivers.New(ctx, logger.WithService(driver), driver, propagatedMount, driverOptions)
 	if err != nil {
 		return nil, err
 	}
 
 	return &VolumePlugin{
-		driverInstance: driverInstance,
-		logger:         logger,
-		mountpointBase: volume.DefaultDockerRootDirectory,
+		driverInstance:  driverInstance,
+		logger:          logger,
+		propagatedMount: propagatedMount,
 	}, nil
 }
 
@@ -59,7 +59,7 @@ func (d *VolumePlugin) List() (*volume.ListResponse, error) {
 		return listResponse, err
 	}
 	for name, metadata := range volumeMetadataMap {
-		listResponse.Volumes = append(listResponse.Volumes, metadata.ToVolume(name, d.mountpointBase))
+		listResponse.Volumes = append(listResponse.Volumes, metadata.ToVolume(name, d.propagatedMount))
 	}
 
 	d.logger.Debugf("listed volumes: %v", listResponse.Volumes)
@@ -75,7 +75,7 @@ func (d *VolumePlugin) Get(req *volume.GetRequest) (*volume.GetResponse, error) 
 	if err != nil {
 		return getResponse, err
 	}
-	getResponse.Volume = metadata.ToVolume(req.Name, d.mountpointBase)
+	getResponse.Volume = metadata.ToVolume(req.Name, d.propagatedMount)
 
 	d.logger.Debugf("got volume %s: %v", req.Name, getResponse.Volume)
 
@@ -96,7 +96,7 @@ func (d *VolumePlugin) Path(req *volume.PathRequest) (*volume.PathResponse, erro
 	if err != nil {
 		return pathResponse, err
 	}
-	pathResponse.Mountpoint = path.Join(d.mountpointBase, mountpoint)
+	pathResponse.Mountpoint = path.Join(d.propagatedMount, mountpoint)
 
 	d.logger.Debugf("path for volume %s is %s", req.Name, pathResponse.Mountpoint)
 
@@ -111,7 +111,7 @@ func (d *VolumePlugin) Mount(req *volume.MountRequest) (*volume.MountResponse, e
 	if err != nil {
 		return mountResponse, err
 	}
-	mountResponse.Mountpoint = path.Join(d.mountpointBase, mountpoint)
+	mountResponse.Mountpoint = path.Join(d.propagatedMount, mountpoint)
 
 	d.logger.Debugf("mounted volume %s with ID %s at %s", req.Name, req.ID, mountResponse.Mountpoint)
 

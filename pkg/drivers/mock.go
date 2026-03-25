@@ -9,6 +9,7 @@ import (
 
 	"github.com/zouy414/docker-volume-plugin/pkg/drivers/apis"
 	"github.com/zouy414/docker-volume-plugin/pkg/log"
+	"github.com/zouy414/docker-volume-plugin/pkg/utils"
 )
 
 func init() {
@@ -16,10 +17,10 @@ func init() {
 }
 
 func mockFactory(ctx context.Context, logger *log.Logger, propagatedMountpoint string, driverOptions string) (apis.Driver, error) {
-	err := os.MkdirAll(propagatedMountpoint, 0755)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create mount point directory: %s", err)
+	if err := utils.MountMock(propagatedMountpoint); err != nil {
+		return nil, fmt.Errorf("failed to create mock mount point: %s", err)
 	}
+
 	return &mock{
 		logger:               logger,
 		propagatedMountpoint: propagatedMountpoint,
@@ -27,6 +28,10 @@ func mockFactory(ctx context.Context, logger *log.Logger, propagatedMountpoint s
 	}, nil
 }
 
+// mock is a simple implementation of the Driver interface for testing purposes.
+// It simulates volume management by maintaining an in-memory map of volume metadata
+// and creating corresponding directories on the filesystem.
+// This allows for testing the plugin's functionality without relying on an actual storage backend.
 type mock struct {
 	logger               *log.Logger
 	propagatedMountpoint string

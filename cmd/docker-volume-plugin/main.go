@@ -29,7 +29,13 @@ func main() {
 	var logger = log.NewWithLogLevel("main", log.StringToLogLevel(logLevel))
 
 	// Create driver adapter
-	driverAdapter, err := adapters.NewVolumePlugin(context.Background(), logger.WithService("docker-volume-plugin"), driver, driverOptions)
+	driverAdapter, err := adapters.NewVolumePlugin(
+		context.Background(),
+		logger.WithService("docker-volume-plugin"),
+		driver,
+		volume.DefaultDockerRootDirectory,
+		driverOptions,
+	)
 	if err != nil {
 		logger.Fatalf("failed to create docker volume plugin adapter: %v", err)
 	}
@@ -48,8 +54,7 @@ func main() {
 
 	// Bind driver adapter to volume handler
 	handler := volume.NewHandler(driverAdapter)
-	err = handler.Serve(listener)
-	if err != nil {
+	if err = handler.Serve(listener); err != nil {
 		logger.Fatalf("failed to serve volume handler: %v", err)
 	}
 }

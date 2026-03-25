@@ -19,6 +19,7 @@ func init() {
 	registerFactory("nfs", nfsFactory)
 }
 
+// nfs is an implementation of the Driver interface for managing volumes on an NFS share.
 type nfs struct {
 	logger   *log.Logger
 	opts     *nfsDriverOptions
@@ -50,8 +51,7 @@ func nfsFactory(ctx context.Context, logger *log.Logger, propagatedMountpoint st
 		PurgeAfterDelete: false,
 		Mock:             false,
 	}
-	err := json.Unmarshal([]byte(driverOptions), opts)
-	if err != nil {
+	if err := json.Unmarshal([]byte(driverOptions), opts); err != nil {
 		return nil, fmt.Errorf("failed to parse driver options: %s", err)
 	}
 
@@ -62,8 +62,7 @@ func nfsFactory(ctx context.Context, logger *log.Logger, propagatedMountpoint st
 			return nil, fmt.Errorf("failed to create mock mount point: %s", err)
 		}
 	} else {
-		err = utils.MountNFS(opts.Address, opts.RemotePath, propagatedMountpoint, opts.MountOptions)
-		if err != nil {
+		if err := utils.MountNFS(opts.Address, opts.RemotePath, propagatedMountpoint, opts.MountOptions); err != nil {
 			return nil, fmt.Errorf("failed to mount NFS share: %s", err)
 		}
 	}

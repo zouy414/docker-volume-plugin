@@ -14,10 +14,17 @@ import (
 var globalValidator *validator.Validate = validator.New()
 
 type VolumeMetadata struct {
-	Mountpoint string        `json:"mountpoint" validate:"required"`
-	CreatedAt  time.Time     `json:"createAt" validate:"required"`
-	Spec       *VolumeSpec   `json:"spec" validate:"required"`
-	Status     *VolumeStatus `json:"status" validate:"required"`
+	// Mountpoint is the relative path to the volume's mount point
+	Mountpoint string `json:"mountpoint" validate:"required"`
+
+	// CreatedAt is the timestamp when the volume was created
+	CreatedAt time.Time `json:"createAt" validate:"required"`
+
+	// Spec contains the volume specification, including options and settings
+	Spec *VolumeSpec `json:"spec" validate:"required"`
+
+	// Status contains the current status of the volume, which can be used to store runtime information or state
+	Status *VolumeStatus `json:"status" validate:"required"`
 }
 
 // Marshal validates the VolumeMetadata struct and marshals it into JSON format.

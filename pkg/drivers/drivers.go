@@ -17,7 +17,7 @@ func registerFactory(name string, factory driverFactory) {
 	driverFactories[name] = factory
 }
 
-// New creates a new driver instance
+// New a specific driver instance
 func New(ctx context.Context, logger *log.Logger, name string, propagatedMountpoint string, driverOptions string) (apis.Driver, error) {
 	factory := driverFactories[name]
 	if factory == nil {
