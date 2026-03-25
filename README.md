@@ -3,7 +3,7 @@
 [![CI](https://github.com/zouy414/docker-volume-plugin/actions/workflows/ci.yml/badge.svg)](https://github.com/zouy414/docker-volume-plugin/actions/workflows/ci.yml)
 [![Release](https://github.com/zouy414/docker-volume-plugin/actions/workflows/release.yml/badge.svg)](https://github.com/zouy414/docker-volume-plugin/actions/workflows/release.yml)
 
-NFS volume plugin for docker
+CIFS/NFS volume plugin for docker
 
 ## Quick Start
 
@@ -46,3 +46,4 @@ volumes:
 |Name|Driver|Options|
 |:-|:-|:-|
 |NFS|nfs|[NFS-Driver.md](docs/NFS-Driver.md)|
+|CIFS|cifs|[CIFS-Driver.md](docs/CIFS-Driver.md)|

@@ -19,10 +19,6 @@ help: #@help Display this help
 	@echo "Variables:"
 	@awk -F '\?=.*#$(VARIABLES_PREFIX)' '/export .+\?=.*#$(VARIABLES_PREFIX)/ {var=$$1; gsub(/export +/, "", var); printf "    \033[36m%-23s\033[0m %s\n", var, $$2}' $(MAKEFILE_LIST) 2>/dev/null
 
-.PHONY: run
-run: #@help Run specified plugin on local
-	go run cmd/$(PLUGIN)/main.go
-
 .PHONY: build
 build: bin/$(PLUGIN) #@help Build binary
 

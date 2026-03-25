@@ -37,6 +37,10 @@ func TestDrivers(t *testing.T) {
 			driver:        "nfs",
 			driverOptions: `{"address": "nfs-server.example.com", "remotePath": "/mock", "mock": true}`,
 		},
+		{
+			driver:        "cifs",
+			driverOptions: `{"address": "cifs-server.example.com", "remotePath": "/share", "username": "user", "password": "pass", "mock": true}`,
+		},
 	}
 	defer func() {
 		for _, c := range cases {

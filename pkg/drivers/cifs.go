@@ -16,37 +16,43 @@ import (
 )
 
 func init() {
-	registerFactory("nfs", nfsFactory)
+	registerFactory("cifs", cifsFactory)
 }
 
-type nfs struct {
+type cifs struct {
 	logger   *log.Logger
-	opts     *nfsDriverOptions
+	opts     *cifsDriverOptions
 	db       *badger.DB
 	rootPath string
 	lock     *sync.RWMutex
 }
 
-type nfsDriverOptions struct {
-	// Address of NFS server
+type cifsDriverOptions struct {
+	// Address of SMB server
 	Address string `json:"address"`
 
-	// RemotePath of NFS exported
+	// RemotePath of SMB exported
 	RemotePath string `json:"remotePath"`
 
-	// MountOptions for NFS
+	// Username for SMB authentication
+	Username string `json:"username"`
+
+	// Password for SMB authentication
+	Password string `json:"password,omitempty"`
+
+	// MountOptions for SMB
 	MountOptions []string `json:"mountOptions,omitempty"`
 
 	// PurgeAfterDelete indicates whether to purge the volume data after deletion
 	PurgeAfterDelete bool `json:"purgeAfterDelete,omitempty"`
 
-	// Mock indicates whether to run in mock mode (no actual NFS mount)
+	// Mock indicates whether to run in mock mode (no actual SMB mount)
 	Mock bool `json:"mock,omitempty"`
 }
 
-func nfsFactory(ctx context.Context, logger *log.Logger, propagatedMountpoint string, driverOptions string) (apis.Driver, error) {
-	opts := &nfsDriverOptions{
-		MountOptions:     []string{"nfsvers=4", "rw", "noatime", "rsize=8192", "wsize=8192", "tcp", "timeo=14", "sync"},
+func cifsFactory(ctx context.Context, logger *log.Logger, propagatedMountpoint string, driverOptions string) (apis.Driver, error) {
+	opts := &cifsDriverOptions{
+		MountOptions:     []string{},
 		PurgeAfterDelete: false,
 		Mock:             false,
 	}
@@ -55,20 +61,21 @@ func nfsFactory(ctx context.Context, logger *log.Logger, propagatedMountpoint st
 		return nil, fmt.Errorf("failed to parse driver options: %s", err)
 	}
 
-	// Mount NFS share to a local mount point
+	// Mount SMB share to a local mount point
 	if opts.Mock {
-		logger.Warning("Mock mode enabled, no actual NFS mount will be performed")
+		logger.Warning("Mock mode enabled, no actual CIFS mount will be performed")
 		if err := utils.MountMock(propagatedMountpoint); err != nil {
 			return nil, fmt.Errorf("failed to create mock mount point: %s", err)
 		}
 	} else {
-		err = utils.MountNFS(opts.Address, opts.RemotePath, propagatedMountpoint, opts.MountOptions)
+		err = utils.MountCIFS(opts.Address, opts.RemotePath, propagatedMountpoint, opts.Username, opts.Password, opts.MountOptions)
 		if err != nil {
-			return nil, fmt.Errorf("failed to mount NFS share: %s", err)
+			logger.Warning(err)
+			return nil, fmt.Errorf("failed to mount CIFS share: %s", err)
 		}
 	}
 
-	return &nfs{
+	return &cifs{
 		logger:   logger,
 		opts:     opts,
 		db:       badger.New(logger.WithService("badger").WithLogLevel(log.WarnLevel), path.Join(propagatedMountpoint, "metadata.db")),
@@ -77,7 +84,7 @@ func nfsFactory(ctx context.Context, logger *log.Logger, propagatedMountpoint st
 	}, nil
 }
 
-func (driver *nfs) Create(name string, options map[string]string) error {
+func (driver *cifs) Create(name string, options map[string]string) error {
 	driver.lock.Lock()
 	defer driver.lock.Unlock()
 
@@ -100,21 +107,21 @@ func (driver *nfs) Create(name string, options map[string]string) error {
 	})
 }
 
-func (driver *nfs) List() (map[string]*apis.VolumeMetadata, error) {
+func (driver *cifs) List() (map[string]*apis.VolumeMetadata, error) {
 	driver.lock.Lock()
 	defer driver.lock.Unlock()
 
 	return driver.db.GetVolumeMetadataMap()
 }
 
-func (driver *nfs) Get(name string) (*apis.VolumeMetadata, error) {
+func (driver *cifs) Get(name string) (*apis.VolumeMetadata, error) {
 	driver.lock.Lock()
 	defer driver.lock.Unlock()
 
 	return driver.db.GetVolumeMetadata(name)
 }
 
-func (driver *nfs) Remove(name string) error {
+func (driver *cifs) Remove(name string) error {
 	driver.lock.Lock()
 	defer driver.lock.Unlock()
 
@@ -127,7 +134,7 @@ func (driver *nfs) Remove(name string) error {
 	})
 }
 
-func (driver *nfs) Path(name string) (string, error) {
+func (driver *cifs) Path(name string) (string, error) {
 	driver.lock.Lock()
 	defer driver.lock.Unlock()
 
@@ -136,7 +143,7 @@ func (driver *nfs) Path(name string) (string, error) {
 	return volumeMetadata.Mountpoint, err
 }
 
-func (driver *nfs) Mount(name string, id string) (string, error) {
+func (driver *cifs) Mount(name string, id string) (string, error) {
 	driver.lock.Lock()
 	defer driver.lock.Unlock()
 
@@ -146,7 +153,7 @@ func (driver *nfs) Mount(name string, id string) (string, error) {
 	})
 }
 
-func (driver *nfs) Unmount(name string, id string) error {
+func (driver *cifs) Unmount(name string, id string) error {
 	driver.lock.Lock()
 	defer driver.lock.Unlock()
 
@@ -156,7 +163,7 @@ func (driver *nfs) Unmount(name string, id string) error {
 	})
 }
 
-func (driver *nfs) Destroy() error {
+func (driver *cifs) Destroy() error {
 	err := driver.db.Close()
 	if err != nil {
 		return fmt.Errorf("failed to close database: %s", err)
