@@ -1,7 +1,10 @@
 # NFS Driver
 
-When a volume is created, this driver will automatically create the corresponding folder on the NFS Server
-and provide a mountpoint locally.
+The NFS (Network File System) driver enables Docker volumes to be backed by NFS
+shares.
+
+When a volume is created, this driver will automatically create the
+corresponding folder on the NFS Server and provide a mountpoint locally.
 
 **NOTE**: This driver requires `flock` feature, so it only supports NFSv4.
 
@@ -9,8 +12,8 @@ and provide a mountpoint locally.
 
 ```json
 {
-    "address":"nfs-server.example.com",
-    "remotePath":"/exported/path"
+    "address": "nfs-server.example.com",
+    "remotePath": "/exported/path"
 }
 ```
 

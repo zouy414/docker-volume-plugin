@@ -1,14 +1,17 @@
 # CIFS Driver
 
-When a volume is created, this driver will automatically create the corresponding folder on the SMB Server
-and provide a mountpoint locally.
+The CIFS (Common Internet File System) driver enables Docker volumes to be
+backed by SMB/CIFS shares.
+
+When a volume is created, this driver will automatically create the
+corresponding folder on the SMB Server and provide a mountpoint locally.
 
 ## Example Driver Options
 
 ```json
 {
-    "address":"cifs-server.example.com",
-    "remotePath":"/share",
+    "address": "cifs-server.example.com",
+    "remotePath": "/share",
     "username": "user",
     "password": "pass",
     "mountOptions": [
@@ -26,7 +29,7 @@ and provide a mountpoint locally.
 |remotePath|string|Remote path of CIFS exported||false|
 |username|string|CIFS server username||false|
 |password|string|CIFS server password||true|
-|mountOptions|list|Mount options when mount CIFS||true|
+|mountOptions|list|Mount options when mount CIFS|[]|true|
 |purgeAfterDelete|bool|Indicates whether to purge volumes data from CIFS after delete docker volume|false|true|
 |mock|bool|Indicates whether to run in mock mode (no actual CIFS mount)|false|true|
 
