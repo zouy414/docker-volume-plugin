@@ -50,7 +50,11 @@ func main() {
 	if err != nil {
 		logger.Fatalf("failed to create unix socket: %v", err)
 	}
-	defer listener.Close()
+	defer func() {
+		if err := listener.Close(); err != nil {
+			logger.Errorf("failed to close unix socket: %v", err)
+		}
+	}()
 
 	// Bind driver adapter to volume handler
 	handler := volume.NewHandler(driverAdapter)
