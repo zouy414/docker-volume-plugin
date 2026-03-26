@@ -18,7 +18,7 @@ jobs:
     env:
       PLUGIN: docker-volume-plugin
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Build the Docker image
         run: IMAGE=${{ env.REGISTRY }}/${{ env.PLUGIN }} TAG=${{ github.ref_name }} make image
       - name: Build the Docker plugin
