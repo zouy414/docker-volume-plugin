@@ -10,7 +10,7 @@ updates:
     schedule:
       interval: "weekly"
   - package-ecosystem: "docker"
-    directory: "/cmd/*/"
+    directory: "/cmd/docker-volume-plugin/"
     schedule:
       interval: "weekly"
   - package-ecosystem: "gomod"
