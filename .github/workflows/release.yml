@@ -9,7 +9,7 @@ env:
   REGISTRY: zouyu613
 
 jobs:
-  docker-volume-plugin:
+  push:
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -19,15 +19,15 @@ jobs:
       PLUGIN: docker-volume-plugin
     steps:
       - uses: actions/checkout@v6
-      - name: Build the Docker image
+      - name: Build Image
         run: IMAGE=${{ env.REGISTRY }}/${{ env.PLUGIN }} TAG=${{ github.ref_name }} make image
-      - name: Build the Docker plugin
+      - name: Build Plugin
         run: IMAGE=${{ env.REGISTRY }}/${{ env.PLUGIN }} TAG=${{ github.ref_name }} make plugin
-      - name: Log into registry
+      - name: Login Registry
         uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121
         with:
           registry: docker.io
           username: ${{ env.REGISTRY }}
           password: ${{ secrets.RELEASE_ACTION_TOKEN }}
-      - name: Push the Docker plugin
+      - name: Push Plugin
         run: docker plugin push ${{ env.REGISTRY }}/${{ env.PLUGIN }}:${{ github.ref_name }}
