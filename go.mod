@@ -4,7 +4,7 @@ go 1.25.0
 
 require (
 	github.com/dgraph-io/badger/v4 v4.9.1
-	github.com/docker/go-connections v0.6.0
+	github.com/docker/go-connections v0.7.0
 	github.com/docker/go-plugins-helpers v0.0.0-20240701071450-45e2431495c8
 	github.com/go-playground/validator/v10 v10.30.2
 	github.com/gofrs/flock v0.13.0
