@@ -32,3 +32,9 @@ corresponding folder on the NFS Server and provide a mountpoint locally.
 |Name|Type|Description|Optional|
 |:-|:-|:-|:-|
 |purgeAfterDelete|string|Replace the purgeAfterDelete in the driver options for this volume|true|
+
+## Troubleshooting
+
+### `failed to copy file info for /var/lib/docker/plugins/` When Container Starting
+
+Add `no_root_squash` option on NFS server side for exported path.
