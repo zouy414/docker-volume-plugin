@@ -147,8 +147,8 @@ func (driver *cifs) Mount(name string, id string) (string, error) {
 	defer driver.lock.Unlock()
 
 	return path.Join(name, "_data"), driver.db.SetVolumeMetadata(name, func(volumeMetadata *apis.VolumeMetadata) error {
-		// Do nothing
-		return nil
+		// Create mount point directory if not exists to avoid "no such file or directory" error when unexpectedly deleted by users
+		return os.MkdirAll(path.Join(driver.rootPath, volumeMetadata.Mountpoint), 0755)
 	})
 }
 
