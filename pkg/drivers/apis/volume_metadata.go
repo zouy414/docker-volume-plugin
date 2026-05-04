@@ -14,9 +14,6 @@ import (
 var globalValidator *validator.Validate = validator.New()
 
 type VolumeMetadata struct {
-	// Mountpoint is the relative path to the volume's mount point
-	Mountpoint string `json:"mountpoint" validate:"required"`
-
 	// CreatedAt is the timestamp when the volume was created
 	CreatedAt time.Time `json:"createAt" validate:"required"`
 
@@ -60,7 +57,7 @@ func (vm *VolumeMetadata) Unmarshal(data []byte) (err error) {
 func (vm *VolumeMetadata) ToVolume(name string, mountpointBase string) *volume.Volume {
 	return &volume.Volume{
 		Name:       name,
-		Mountpoint: path.Join(mountpointBase, vm.Mountpoint),
+		Mountpoint: path.Join(mountpointBase, vm.Status.Mountpoint),
 		CreatedAt:  vm.CreatedAt.Local().Format(time.RFC3339),
 		Status:     map[string]interface{}{},
 	}
@@ -87,4 +84,7 @@ func (spec *VolumeSpec) Unmarshal(data map[string]string) (err error) {
 	return nil
 }
 
-type VolumeStatus struct{}
+type VolumeStatus struct {
+	// Mountpoint is the relative path to the volume's mount point
+	Mountpoint string `json:"mountpoint" validate:"required"`
+}

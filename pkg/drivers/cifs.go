@@ -4,13 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"os"
-	"path"
-	"sync"
-	"time"
 
 	"github.com/zouy414/docker-volume-plugin/pkg/drivers/apis"
-	"github.com/zouy414/docker-volume-plugin/pkg/drivers/storage/badger"
+	"github.com/zouy414/docker-volume-plugin/pkg/drivers/storage"
 	"github.com/zouy414/docker-volume-plugin/pkg/log"
 	"github.com/zouy414/docker-volume-plugin/pkg/utils"
 )
@@ -23,9 +19,8 @@ func init() {
 type cifs struct {
 	logger   *log.Logger
 	opts     *cifsDriverOptions
-	db       *badger.DB
+	storage  *storage.Builtin
 	rootPath string
-	lock     *sync.RWMutex
 }
 
 type cifsDriverOptions struct {
@@ -77,98 +72,77 @@ func cifsFactory(ctx context.Context, logger *log.Logger, propagatedMountpoint s
 	return &cifs{
 		logger:   logger,
 		opts:     opts,
-		db:       badger.New(logger.WithService("badger").WithLogLevel(log.WarnLevel), path.Join(propagatedMountpoint, "metadata.db")),
+		storage:  storage.NewBuiltin(logger.WithService("storage").WithLogLevel(log.WarnLevel), propagatedMountpoint),
 		rootPath: propagatedMountpoint,
-		lock:     &sync.RWMutex{},
 	}, nil
 }
 
 func (driver *cifs) Create(name string, options map[string]string) error {
-	driver.lock.Lock()
-	defer driver.lock.Unlock()
-
-	spec := apis.VolumeSpec{
+	spec := &apis.VolumeSpec{
 		PurgeAfterDelete: driver.opts.PurgeAfterDelete,
 	}
 	if err := spec.Unmarshal(options); err != nil {
 		return err
 	}
 
-	return driver.db.CreateVolumeMetadata(name, func(volumeMetadata *apis.VolumeMetadata) error {
-		*volumeMetadata = apis.VolumeMetadata{
-			Mountpoint: path.Join(name, "_data"),
-			CreatedAt:  time.Now(),
-			Spec:       &spec,
-			Status:     &apis.VolumeStatus{},
-		}
-
-		return os.MkdirAll(path.Join(driver.rootPath, volumeMetadata.Mountpoint), 0755)
-	})
+	return driver.storage.CreateVolume(name, spec)
 }
 
 func (driver *cifs) List() (map[string]*apis.VolumeMetadata, error) {
-	driver.lock.Lock()
-	defer driver.lock.Unlock()
-
-	return driver.db.GetVolumeMetadataMap()
+	return driver.storage.GetVolumeMetadataMap()
 }
 
 func (driver *cifs) Get(name string) (*apis.VolumeMetadata, error) {
-	driver.lock.Lock()
-	defer driver.lock.Unlock()
-
-	return driver.db.GetVolumeMetadata(name)
+	return driver.storage.GetVolumeMetadata(name)
 }
 
 func (driver *cifs) Remove(name string) error {
-	driver.lock.Lock()
-	defer driver.lock.Unlock()
+	metadata, err := driver.storage.GetVolumeMetadata(name)
+	if err != nil {
+		return fmt.Errorf("failed to get volume metadata: %s", err)
+	}
 
-	return driver.db.DeleteVolumeMetadata(name, func(volumeMetadata *apis.VolumeMetadata) error {
-		if !volumeMetadata.Spec.PurgeAfterDelete {
-			return nil
+	err = driver.storage.DeleteVolumeMetadata(name)
+	if err != nil {
+		return fmt.Errorf("failed to delete volume metadata: %s", err)
+	}
+
+	if metadata.Spec.PurgeAfterDelete == true {
+		err = driver.storage.DeleteVolume(name)
+		if err != nil {
+			return fmt.Errorf("failed to delete volume data: %s", err)
 		}
+	}
 
-		return os.RemoveAll(path.Join(driver.rootPath, name))
-	})
+	return nil
 }
 
 func (driver *cifs) Path(name string) (string, error) {
-	driver.lock.Lock()
-	defer driver.lock.Unlock()
-
-	volumeMetadata, err := driver.db.GetVolumeMetadata(name)
-
-	return volumeMetadata.Mountpoint, err
+	metadata, err := driver.storage.GetVolumeMetadata(name)
+	if err != nil {
+		return "", err
+	}
+	return metadata.Status.Mountpoint, err
 }
 
 func (driver *cifs) Mount(name string, id string) (string, error) {
-	driver.lock.Lock()
-	defer driver.lock.Unlock()
-
-	return path.Join(name, "_data"), driver.db.SetVolumeMetadata(name, func(volumeMetadata *apis.VolumeMetadata) error {
-		// Create mount point directory if not exists to avoid "no such file or directory" error when unexpectedly deleted by users
-		return os.MkdirAll(path.Join(driver.rootPath, volumeMetadata.Mountpoint), 0755)
-	})
+	return driver.Path(name)
 }
 
 func (driver *cifs) Unmount(name string, id string) error {
-	driver.lock.Lock()
-	defer driver.lock.Unlock()
-
-	return driver.db.SetVolumeMetadata(name, func(volumeMetadata *apis.VolumeMetadata) error {
-		// Do nothing
-		return nil
-	})
+	_, err := driver.storage.GetVolumeMetadata(name)
+	return err
 }
 
 func (driver *cifs) Destroy() error {
-	if err := driver.db.Close(); err != nil {
-		return fmt.Errorf("failed to close database: %s", err)
+	err := driver.storage.Close()
+	if err != nil {
+		return fmt.Errorf("failed to close storage: %s", err)
 	}
 
 	if !driver.opts.Mock {
-		if err := utils.Umount(driver.rootPath); err != nil {
+		err = utils.Umount(driver.rootPath)
+		if err != nil {
 			return fmt.Errorf("failed to unmount CIFS mount root path %s: %s", driver.rootPath, err)
 		}
 	}

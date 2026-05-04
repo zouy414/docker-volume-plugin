@@ -40,12 +40,13 @@ type mock struct {
 
 func (driver *mock) Create(name string, options map[string]string) error {
 	driver.volumeMetadataMap[name] = &apis.VolumeMetadata{
-		Mountpoint: name,
-		CreatedAt:  time.Now(),
-		Spec:       &apis.VolumeSpec{},
-		Status:     &apis.VolumeStatus{},
+		CreatedAt: time.Now(),
+		Spec:      &apis.VolumeSpec{},
+		Status: &apis.VolumeStatus{
+			Mountpoint: path.Join(driver.propagatedMountpoint, name),
+		},
 	}
-	return os.MkdirAll(path.Join(driver.propagatedMountpoint, driver.volumeMetadataMap[name].Mountpoint), 0755)
+	return os.MkdirAll(path.Join(driver.propagatedMountpoint, driver.volumeMetadataMap[name].Status.Mountpoint), 0755)
 }
 
 func (driver *mock) List() (map[string]*apis.VolumeMetadata, error) {
@@ -69,7 +70,7 @@ func (driver *mock) Path(name string) (string, error) {
 	if !existed {
 		return "", fmt.Errorf("volume %s does not exist", name)
 	}
-	return volumeMetadata.Mountpoint, nil
+	return volumeMetadata.Status.Mountpoint, nil
 }
 
 func (driver *mock) Mount(name string, id string) (string, error) {
@@ -77,7 +78,7 @@ func (driver *mock) Mount(name string, id string) (string, error) {
 	if !existed {
 		return "", fmt.Errorf("volume %s does not exist", name)
 	}
-	return volumeMetadata.Mountpoint, nil
+	return volumeMetadata.Status.Mountpoint, nil
 }
 
 func (driver *mock) Unmount(name string, id string) error {

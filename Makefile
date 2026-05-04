@@ -6,7 +6,7 @@ endif
 
 export PLUGIN ?= docker-volume-plugin#@variables The target plugin to run or build, supported: docker-volume-plugin
 export IMAGE ?= $(PLUGIN)#@variables The image name of builded image, default to plugin name
-export TAG ?= latest#@variables The tag of builded image
+export TAG ?= dev#@variables The tag of builded image
 
 HELP_PREFIX = @help
 VARIABLES_PREFIX = @variables
@@ -27,8 +27,8 @@ bin/%:
 
 .PHONY: image
 image: #@help Build image
-	sudo docker rmi -f $(IMAGE):$(TAG)
-	sudo docker build \
+	docker rmi -f $(IMAGE):$(TAG)
+	docker build \
 		-t $(IMAGE):$(TAG) \
 		--build-arg http_proxy=$(http_proxy) \
 		--build-arg https_proxy=$(https_proxy) \
@@ -36,14 +36,14 @@ image: #@help Build image
 
 .PHONY: plugin
 plugin: #@help Create docker plugin from image
-	sudo docker plugin disable -f $(IMAGE):$(TAG) || echo "plugin $(IMAGE):$(TAG) already disabled"
-	sudo docker plugin rm -f $(IMAGE):$(TAG) || echo "plugin $(IMAGE):$(TAG) already removed"
+	docker plugin disable -f $(IMAGE):$(TAG) || echo "plugin $(IMAGE):$(TAG) already disabled"
+	docker plugin rm -f $(IMAGE):$(TAG) || echo "plugin $(IMAGE):$(TAG) already removed"
 	rm -rf bin/plugin
 	mkdir -p bin/plugin/rootfs
-	sudo docker export $(shell sudo docker create $(IMAGE):$(TAG) --name plugin_$(PLUGIN)) | tar -x -C bin/plugin/rootfs
+	docker export $(shell docker create $(IMAGE):$(TAG) --name $(PLUGIN)_builder) | tar -x -C bin/plugin/rootfs
 	cp cmd/docker-volume-plugin/config.json bin/plugin
-	sudo docker rm -vf plugin_$(PLUGIN)
-	sudo docker plugin create $(IMAGE):$(TAG) bin/plugin
+	docker rm -vf $(PLUGIN)_builder
+	docker plugin create $(IMAGE):$(TAG) bin/plugin
 
 .PHONY: unit
 unit: #@help Run unit test
