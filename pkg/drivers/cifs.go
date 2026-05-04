@@ -107,7 +107,7 @@ func (driver *cifs) Remove(name string) error {
 		return fmt.Errorf("failed to delete volume metadata: %s", err)
 	}
 
-	if metadata.Spec.PurgeAfterDelete == true {
+	if metadata.Spec.PurgeAfterDelete {
 		err = driver.storage.DeleteVolume(name)
 		if err != nil {
 			return fmt.Errorf("failed to delete volume data: %s", err)

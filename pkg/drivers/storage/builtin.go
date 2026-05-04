@@ -73,7 +73,11 @@ func (s *Builtin) CreateVolume(name string, spec *apis.VolumeSpec) error {
 	if err != nil {
 		return fmt.Errorf("failed to acquire lock: %v", err)
 	}
-	defer lock.Unlock()
+	defer func() {
+		if err := lock.Unlock(); err != nil {
+			s.logger.Errorf("failed to unlock flock: %v", err)
+		}
+	}()
 
 	if _, err := os.Stat(s.getMetadataFilePath(name)); err == nil {
 		s.logger.Warningf("volume %s already exists, skipping creation", name)
@@ -135,7 +139,11 @@ func (s *Builtin) DeleteVolumeMetadata(name string) error {
 	if err != nil {
 		return fmt.Errorf("failed to acquire lock: %v", err)
 	}
-	defer lock.Unlock()
+	defer func() {
+		if err := lock.Unlock(); err != nil {
+			s.logger.Errorf("failed to unlock flock: %v", err)
+		}
+	}()
 
 	return os.Remove(s.getMetadataFilePath(name))
 }
