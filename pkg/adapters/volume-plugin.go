@@ -3,7 +3,6 @@ package adapters
 import (
 	"context"
 	"path"
-	"strings"
 
 	"github.com/zouy414/docker-volume-plugin/pkg/drivers"
 	"github.com/zouy414/docker-volume-plugin/pkg/drivers/apis"
@@ -36,16 +35,7 @@ func NewVolumePlugin(ctx context.Context, logger *log.Logger, driver string, pro
 
 func (d *VolumePlugin) Create(req *volume.CreateRequest) error {
 	d.logger.Debugf("creating volume %s with options %v", req.Name, req.Options)
-
-	err := d.driverInstance.Create(req.Name, req.Options)
-	if err != nil && strings.Contains(err.Error(), "already created") {
-		d.logger.Warning("volume %s already exists, skipping creation", req.Name)
-		return nil
-	}
-
-	d.logger.Debugf("created volume %s: %v", req.Name)
-
-	return err
+	return d.driverInstance.Create(req.Name, req.Options)
 }
 
 func (d *VolumePlugin) List() (*volume.ListResponse, error) {

@@ -39,9 +39,19 @@ type mock struct {
 }
 
 func (driver *mock) Create(name string, options map[string]string) error {
+	if driver.volumeMetadataMap[name] != nil {
+		driver.logger.Warning(fmt.Sprintf("Volume %s already exists, skipping creation", name))
+		return nil
+	}
+
+	spec := &apis.VolumeSpec{}
+	if err := spec.Unmarshal(options); err != nil {
+		return err
+	}
+
 	driver.volumeMetadataMap[name] = &apis.VolumeMetadata{
 		CreatedAt: time.Now(),
-		Spec:      &apis.VolumeSpec{},
+		Spec:      spec,
 		Status: &apis.VolumeStatus{
 			Mountpoint: path.Join(driver.propagatedMountpoint, name),
 		},

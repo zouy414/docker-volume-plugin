@@ -58,6 +58,14 @@ func TestDrivers(t *testing.T) {
 			err = driver.Create("test", map[string]string{"purgeAfterDelete": "true"})
 			assert.NoError(t, err)
 
+			// Test Duplicate Create
+			err = driver.Create("test", map[string]string{"purgeAfterDelete": "false"})
+			assert.NoError(t, err)
+			volumeMetadata, err := driver.Get("test")
+			assert.NoError(t, err)
+			assert.NotNil(t, volumeMetadata)
+			assert.Equal(t, true, volumeMetadata.Spec.PurgeAfterDelete)
+
 			// Test List
 			volumeMetadataMap, err := driver.List()
 			assert.NoError(t, err)

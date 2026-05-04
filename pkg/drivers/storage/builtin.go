@@ -31,15 +31,6 @@ func (s *Builtin) getMetadataFilePath(name string) string {
 	return path.Join(s.rootPath, name, s.metadataFileName)
 }
 
-func (s *Builtin) upsertMetadata(name string, metadata *apis.VolumeMetadata) error {
-	data, err := metadata.Marshal()
-	if err != nil {
-		return fmt.Errorf("failed to marshal volume metadata: %v", err)
-	}
-
-	return os.WriteFile(s.getMetadataFilePath(name), data, 0644)
-}
-
 func (s *Builtin) acquireMetadataLock(name string) (*flock.Flock, error) {
 	lock := flock.New(path.Join(s.rootPath, name, s.metadataLockName))
 
@@ -84,7 +75,17 @@ func (s *Builtin) CreateVolume(name string, spec *apis.VolumeSpec) error {
 	}
 	defer lock.Unlock()
 
-	return s.upsertMetadata(name, metadata)
+	if _, err := os.Stat(s.getMetadataFilePath(name)); err == nil {
+		s.logger.Warningf("volume %s already exists, skipping creation", name)
+		return nil
+	}
+
+	data, err := metadata.Marshal()
+	if err != nil {
+		return fmt.Errorf("failed to marshal volume metadata: %v", err)
+	}
+
+	return os.WriteFile(s.getMetadataFilePath(name), data, 0644)
 }
 
 // GetVolumeMetadata retrieves the volume metadata for the specified volume name
