@@ -89,15 +89,15 @@ func (driver *cifs) Create(name string, options map[string]string) error {
 }
 
 func (driver *cifs) List() (map[string]*apis.VolumeMetadata, error) {
-	return driver.storage.GetVolumeMetadataMap()
+	return driver.storage.ListVolumeMetadata()
 }
 
 func (driver *cifs) Get(name string) (*apis.VolumeMetadata, error) {
-	return driver.storage.GetVolumeMetadata(name)
+	return driver.storage.FetchVolumeMetadata(name)
 }
 
 func (driver *cifs) Remove(name string) error {
-	metadata, err := driver.storage.GetVolumeMetadata(name)
+	metadata, err := driver.storage.FetchVolumeMetadata(name)
 	if err != nil {
 		return fmt.Errorf("failed to get volume metadata: %s", err)
 	}
@@ -118,7 +118,7 @@ func (driver *cifs) Remove(name string) error {
 }
 
 func (driver *cifs) Path(name string) (string, error) {
-	metadata, err := driver.storage.GetVolumeMetadata(name)
+	metadata, err := driver.storage.FetchVolumeMetadata(name)
 	if err != nil {
 		return "", err
 	}
@@ -130,7 +130,7 @@ func (driver *cifs) Mount(name string, id string) (string, error) {
 }
 
 func (driver *cifs) Unmount(name string, id string) error {
-	_, err := driver.storage.GetVolumeMetadata(name)
+	_, err := driver.storage.FetchVolumeMetadata(name)
 	return err
 }
 

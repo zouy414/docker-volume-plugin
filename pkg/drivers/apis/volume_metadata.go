@@ -38,7 +38,7 @@ func (vm *VolumeMetadata) Marshal() (data []byte, err error) {
 	return data, err
 }
 
-// Unmarshal unmarshals the JSON data into the VolumeMetadata struct and validates it.
+// Unmarshal the JSON data into the VolumeMetadata struct and validates it.
 func (vm *VolumeMetadata) Unmarshal(data []byte) (err error) {
 	err = json.Unmarshal(data, vm)
 	if err != nil {
