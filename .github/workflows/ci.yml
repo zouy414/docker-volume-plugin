@@ -21,7 +21,7 @@ jobs:
         with:
           go-version: ${{ env.GO_VERSION }}
       - name: Lint
-        uses: golangci/golangci-lint-action@v9.2.0
+        uses: golangci/golangci-lint-action@v9.2.1
       - name: Test
         run: make unit
       - name: Build
