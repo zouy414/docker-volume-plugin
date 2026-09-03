@@ -6,7 +6,7 @@ require (
 	github.com/docker/go-connections v0.8.1
 	github.com/docker/go-plugins-helpers v0.0.0-20240701071450-45e2431495c8
 	github.com/go-playground/validator/v10 v10.30.3
-	github.com/gofrs/flock v0.13.0
+	github.com/gofrs/flock v0.13.1
 	github.com/moby/sys/mountinfo v0.7.2
 	github.com/stretchr/testify v1.12.1
 )
@@ -20,6 +20,6 @@ require (
 	github.com/leodido/go-urn v1.4.0 // indirect
 	go.yaml.in/yaml/v3 v3.0.5 // indirect
 	golang.org/x/crypto v0.52.0 // indirect
-	golang.org/x/sys v0.45.0 // indirect
+	golang.org/x/sys v0.47.0 // indirect
 	golang.org/x/text v0.37.0 // indirect
 )
