@@ -3,7 +3,7 @@ module github.com/zouy414/docker-volume-plugin
 go 1.26.0
 
 require (
-	github.com/docker/go-connections v0.8.1
+	github.com/docker/go-connections v0.8.2
 	github.com/docker/go-plugins-helpers v0.0.0-20240701071450-45e2431495c8
 	github.com/go-playground/validator/v10 v10.30.5
 	github.com/gofrs/flock v0.13.1
