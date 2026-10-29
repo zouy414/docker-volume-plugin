@@ -3,7 +3,7 @@ WORKDIR /workspace
 COPY . /workspace
 RUN PLUGIN=docker-volume-plugin make build
 
-FROM alpine:3.24.2
+FROM alpine:3.24.3
 WORKDIR /
 COPY --from=builder /workspace/bin/docker-volume-plugin .
 USER root
